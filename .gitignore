@@ -1,0 +1,13 @@
+.DS_Store
+.build/
+.swiftpm/
+Packages/CCTVCore/.build/
+Packages/CCTVCore/.swiftpm/
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.ipa
+*.dSYM.zip
+*.dSYM
