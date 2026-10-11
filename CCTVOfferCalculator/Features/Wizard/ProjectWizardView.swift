@@ -125,7 +125,7 @@ struct WizardProgressHeader: View {
                 HStack(spacing: 8) {
                     ForEach(WizardStep.allCases) { step in
                         let isCurrent = step == viewModel.step
-                        let hasIssues = !viewModel.issues(for: step).isEmpty
+                        let hasIssues = !viewModel.stepIssues(step).isEmpty
                         Button {
                             viewModel.jump(to: step)
                         } label: {

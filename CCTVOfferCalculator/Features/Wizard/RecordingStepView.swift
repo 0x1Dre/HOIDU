@@ -25,9 +25,9 @@ struct RecordingStepView: View {
 
     var body: some View {
         Form {
-            if !viewModel.issues(for: .aufzeichnung).isEmpty {
+            if !viewModel.stepIssues(.aufzeichnung).isEmpty {
                 Section {
-                    ValidationBanner(issues: viewModel.issues(for: .aufzeichnung))
+                    ValidationBanner(issues: viewModel.stepIssues(.aufzeichnung))
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 }

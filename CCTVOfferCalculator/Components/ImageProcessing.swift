@@ -2,6 +2,7 @@ import UIKit
 
 /// Verkleinert und komprimiert Fotos vor dem Speichern. Die Ausrichtung wird dabei
 /// normalisiert, damit Markierungen und PDF-Ausgabe übereinstimmen.
+@MainActor
 enum ImageProcessing {
     static let maximumDimension: CGFloat = 1600
     static let jpegQuality: CGFloat = 0.72

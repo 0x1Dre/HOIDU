@@ -31,9 +31,9 @@ struct AreasStepView: View {
 
     var body: some View {
         Form {
-            if !viewModel.issues(for: .bereiche).isEmpty {
+            if !viewModel.stepIssues(.bereiche).isEmpty {
                 Section {
-                    ValidationBanner(issues: viewModel.issues(for: .bereiche))
+                    ValidationBanner(issues: viewModel.stepIssues(.bereiche))
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 }

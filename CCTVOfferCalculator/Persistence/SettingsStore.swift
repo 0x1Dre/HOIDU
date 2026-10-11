@@ -18,48 +18,82 @@ final class SettingsStore {
 
     private let defaults: UserDefaults
 
-    var settings: AppSettings {
-        didSet { persistSettings() }
-    }
-
-    /// Zeigt Einkaufspreise, Margen und Deckungsbeiträge in der App an.
-    var internalMode: Bool {
-        didSet { defaults.set(internalMode, forKey: Keys.internalMode) }
-    }
-
-    var includePhotosInCustomerPDF: Bool {
-        didSet { defaults.set(includePhotosInCustomerPDF, forKey: Keys.includePhotosInCustomerPDF) }
-    }
-
-    var includePhotosInJSON: Bool {
-        didSet { defaults.set(includePhotosInJSON, forKey: Keys.includePhotosInJSON) }
-    }
-
-    var seededCatalogVersion: Int {
-        didSet { defaults.set(seededCatalogVersion, forKey: Keys.seededCatalogVersion) }
-    }
-
-    var demoProjectsSeeded: Bool {
-        didSet { defaults.set(demoProjectsSeeded, forKey: Keys.demoProjectsSeeded) }
-    }
+    // Gespeicherte Werte; die öffentlichen Eigenschaften schreiben bei jeder Änderung in die UserDefaults.
+    private var storedSettings: AppSettings
+    private var storedInternalMode: Bool
+    private var storedPhotosInCustomerPDF: Bool
+    private var storedPhotosInJSON: Bool
+    private var storedCatalogVersion: Int
+    private var storedDemoProjectsSeeded: Bool
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         if let data = defaults.data(forKey: Keys.settings),
            let decoded = try? JSONDecoder().decode(AppSettings.self, from: data) {
-            settings = decoded
+            storedSettings = decoded
         } else {
-            settings = AppSettings()
+            storedSettings = AppSettings()
         }
-        internalMode = defaults.bool(forKey: Keys.internalMode)
-        includePhotosInCustomerPDF = defaults.bool(forKey: Keys.includePhotosInCustomerPDF)
-        includePhotosInJSON = defaults.object(forKey: Keys.includePhotosInJSON) as? Bool ?? true
-        seededCatalogVersion = defaults.integer(forKey: Keys.seededCatalogVersion)
-        demoProjectsSeeded = defaults.bool(forKey: Keys.demoProjectsSeeded)
+        storedInternalMode = defaults.bool(forKey: Keys.internalMode)
+        storedPhotosInCustomerPDF = defaults.bool(forKey: Keys.includePhotosInCustomerPDF)
+        storedPhotosInJSON = defaults.object(forKey: Keys.includePhotosInJSON) as? Bool ?? true
+        storedCatalogVersion = defaults.integer(forKey: Keys.seededCatalogVersion)
+        storedDemoProjectsSeeded = defaults.bool(forKey: Keys.demoProjectsSeeded)
     }
 
-    var calculation: CalculationSettings { settings.calculation }
-    var company: CompanyProfile { settings.company }
+    var settings: AppSettings {
+        get { storedSettings }
+        set {
+            storedSettings = newValue
+            if let data = try? JSONEncoder().encode(newValue) {
+                defaults.set(data, forKey: Keys.settings)
+            }
+        }
+    }
+
+    /// Zeigt Einkaufspreise, Margen und Deckungsbeiträge in der App an.
+    var internalMode: Bool {
+        get { storedInternalMode }
+        set {
+            storedInternalMode = newValue
+            defaults.set(newValue, forKey: Keys.internalMode)
+        }
+    }
+
+    var includePhotosInCustomerPDF: Bool {
+        get { storedPhotosInCustomerPDF }
+        set {
+            storedPhotosInCustomerPDF = newValue
+            defaults.set(newValue, forKey: Keys.includePhotosInCustomerPDF)
+        }
+    }
+
+    var includePhotosInJSON: Bool {
+        get { storedPhotosInJSON }
+        set {
+            storedPhotosInJSON = newValue
+            defaults.set(newValue, forKey: Keys.includePhotosInJSON)
+        }
+    }
+
+    var seededCatalogVersion: Int {
+        get { storedCatalogVersion }
+        set {
+            storedCatalogVersion = newValue
+            defaults.set(newValue, forKey: Keys.seededCatalogVersion)
+        }
+    }
+
+    var demoProjectsSeeded: Bool {
+        get { storedDemoProjectsSeeded }
+        set {
+            storedDemoProjectsSeeded = newValue
+            defaults.set(newValue, forKey: Keys.demoProjectsSeeded)
+        }
+    }
+
+    var calculation: CalculationSettings { storedSettings.calculation }
+    var company: CompanyProfile { storedSettings.company }
 
     /// Fortlaufende Offertnummer pro Jahr, z. B. «OF-2026-0007».
     func nextOfferNumber(date: Date = Date()) -> String {
@@ -70,12 +104,8 @@ final class SettingsStore {
     }
 
     func resetCalculationDefaults() {
-        settings.calculation = CalculationSettings()
-    }
-
-    private func persistSettings() {
-        if let data = try? JSONEncoder().encode(settings) {
-            defaults.set(data, forKey: Keys.settings)
-        }
+        var updated = settings
+        updated.calculation = CalculationSettings()
+        settings = updated
     }
 }

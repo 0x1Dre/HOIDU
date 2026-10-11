@@ -6,9 +6,9 @@ struct CustomerStepView: View {
 
     var body: some View {
         Form {
-            if !viewModel.issues(for: .kunde).isEmpty {
+            if !viewModel.stepIssues(.kunde).isEmpty {
                 Section {
-                    ValidationBanner(issues: viewModel.issues(for: .kunde))
+                    ValidationBanner(issues: viewModel.stepIssues(.kunde))
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 }

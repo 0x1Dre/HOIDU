@@ -40,15 +40,15 @@ final class WizardViewModel {
         issues.first { $0.field == field }?.message
     }
 
-    func issues(for step: WizardStep) -> [ValidationIssue] {
+    func stepIssues(_ step: WizardStep) -> [ValidationIssue] {
         issues.filter { $0.step == step }
     }
 
     @discardableResult
     func validateCurrentStep() -> Bool {
-        let stepIssues = ProjectValidator.validate(draft, step: step)
-        issues = issues.filter { $0.step != step } + stepIssues
-        return stepIssues.isEmpty
+        let found = ProjectValidator.validate(draft, step: step)
+        issues = issues.filter { $0.step != step } + found
+        return found.isEmpty
     }
 
     func next() {
@@ -100,7 +100,7 @@ final class WizardViewModel {
         } else {
             draft.areas.append(area)
         }
-        if !issues(for: .bereiche).isEmpty { validateCurrentStep() }
+        if !stepIssues(.bereiche).isEmpty { validateCurrentStep() }
     }
 
     func deleteAreas(at offsets: IndexSet) {

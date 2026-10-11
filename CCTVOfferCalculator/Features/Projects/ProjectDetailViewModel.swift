@@ -26,10 +26,6 @@ final class ProjectDetailViewModel {
         }
     }
 
-    func manufacturerBinding(for tier: OfferTier) -> Manufacturer? {
-        record.variantSelection[tier]
-    }
-
     var storageInput: StorageInput {
         let variant = analysis?.recommendedVariant
         return StorageInput(

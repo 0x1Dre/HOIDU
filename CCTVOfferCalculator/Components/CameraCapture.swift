@@ -32,13 +32,13 @@ enum CameraAccessIssue: String, Identifiable {
     var canOpenSettings: Bool { self == .denied }
 }
 
+@MainActor
 enum CameraAccess {
     static var isCameraAvailable: Bool {
         UIImagePickerController.isSourceTypeAvailable(.camera)
     }
 
     /// Prüft Verfügbarkeit und Berechtigung; fragt beim ersten Mal nach der Berechtigung.
-    @MainActor
     static func requestAccess() async -> CameraAccessIssue? {
         guard isCameraAvailable else { return .unavailable }
         switch AVCaptureDevice.authorizationStatus(for: .video) {

@@ -65,7 +65,7 @@ struct PhotoGalleryEditor: View {
                 .buttonStyle(.borderless)
                 .accessibilityHint(CameraAccess.isCameraAvailable ? "Öffnet die Kamera" : "Keine Kamera verfügbar, bitte Mediathek verwenden")
 
-                PhotosPicker(selection: $pickerItems, maxSelectionCount: 10, matching: .images, photoLibrary: .shared()) {
+                PhotosPicker(selection: $pickerItems, maxSelectionCount: 10, matching: .images) {
                     ActionLabel(title: "Mediathek", systemImage: "photo.on.rectangle", prominent: false)
                 }
                 .buttonStyle(.borderless)
@@ -224,7 +224,7 @@ struct PhotoDetailEditor: View {
                             Label("Neu aufnehmen", systemImage: "camera.rotate")
                         }
                         .frame(minHeight: 44)
-                        PhotosPicker(selection: $replaceItem, matching: .images, photoLibrary: .shared()) {
+                        PhotosPicker(selection: $replaceItem, matching: .images) {
                             Label("Aus Mediathek ersetzen", systemImage: "photo.on.rectangle")
                         }
                         .frame(minHeight: 44)
