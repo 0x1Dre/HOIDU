@@ -1,6 +1,26 @@
 import SwiftUI
 import CCTVCore
 
+struct AlertMessage: Identifiable {
+    let id = UUID()
+    let title: String
+    let text: String
+}
+
+extension View {
+    func messageAlert(_ message: Binding<AlertMessage?>) -> some View {
+        alert(
+            message.wrappedValue?.title ?? "",
+            isPresented: Binding(get: { message.wrappedValue != nil }, set: { if !$0 { message.wrappedValue = nil } }),
+            presenting: message.wrappedValue
+        ) { _ in
+            Button("OK", role: .cancel) {}
+        } message: { value in
+            Text(value.text)
+        }
+    }
+}
+
 struct SectionHeader: View {
     let title: String
     var subtitle: String?
