@@ -311,13 +311,10 @@ struct ProjectDetailView: View {
         }
     }
 
+    /// Navigiert zuerst zurück; die Projektliste löscht danach, damit keine Ansicht mehr auf das gelöschte Modell zugreift.
     private func delete() {
-        do {
-            router.projectPath.removeAll()
-            try repository.delete(project)
-        } catch {
-            alert = AlertMessage(title: "Löschen fehlgeschlagen", text: error.localizedDescription)
-        }
+        router.pendingProjectDeletion = project.id
+        router.projectPath.removeAll()
     }
 }
 

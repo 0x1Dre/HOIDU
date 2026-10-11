@@ -89,6 +89,14 @@ struct ProjectListView: View {
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.json]) { result in
             importProject(result)
         }
+        .task(id: router.pendingProjectDeletion) {
+            guard let id = router.pendingProjectDeletion else { return }
+            try? await Task.sleep(for: .milliseconds(400))
+            if let project = repository.project(id: id) {
+                delete(project)
+            }
+            router.pendingProjectDeletion = nil
+        }
         .confirmationDialog(
             "Projekt löschen?",
             isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),

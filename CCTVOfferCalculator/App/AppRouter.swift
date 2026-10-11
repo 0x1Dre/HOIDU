@@ -39,6 +39,7 @@ struct ProjectRoute: Hashable {
 final class AppRouter {
     var section: AppSection = .dashboard
     var projectPath: [ProjectRoute] = []
+    var pendingProjectDeletion: UUID?
     var newProjectWizard: WizardViewModel
 
     init() {
