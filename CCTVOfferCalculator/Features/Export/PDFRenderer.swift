@@ -2,6 +2,9 @@ import UIKit
 import CCTVCore
 
 /// Rendert ein `OfferDocument` als mehrseitiges A4-PDF mit UIKit (ohne Drittanbieter).
+///
+/// Gestaltung nach Ostsicht-Manual: Logo oben links, Barlow (Titel SemiBold, Text Regular),
+/// Titel in Anthrazit, Tabellenköpfe in Grün, grüne Horizontlinie im Fuss mit Kontaktdaten.
 @MainActor
 enum PDFRenderer {
     static let pageSize = CGSize(width: 595.28, height: 841.89)
@@ -11,8 +14,8 @@ enum PDFRenderer {
         format.documentInfo = [
             kCGPDFContextTitle as String: document.title,
             kCGPDFContextSubject as String: document.subtitle,
-            kCGPDFContextCreator as String: "CCTV Offer Calculator CH",
-            kCGPDFContextAuthor as String: document.letterhead.first ?? "CCTV Offer Calculator CH"
+            kCGPDFContextCreator as String: "Ostsicht Offerte",
+            kCGPDFContextAuthor as String: document.letterhead.first ?? "Ostsicht"
         ]
         let renderer = UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: pageSize), format: format)
         return renderer.pdfData { context in
@@ -30,11 +33,14 @@ private final class PDFPageWriter {
     private var y: CGFloat = 0
     private var pageNumber = 0
 
-    private let navy = UIColor(red: 0.06, green: 0.17, blue: 0.36, alpha: 1)
-    private let text = UIColor(white: 0.1, alpha: 1)
-    private let muted = UIColor(white: 0.42, alpha: 1)
-    private let stripe = UIColor(white: 0.95, alpha: 1)
-    private let rule = UIColor(white: 0.82, alpha: 1)
+    private let gruen = OstsichtColor.gruen
+    private let sonne = OstsichtColor.sonne
+    private let text = OstsichtColor.anthrazit
+    private let muted = OstsichtColor.grau
+    private let stripe = OstsichtColor.kalk
+    private let rule = UIColor(hex: 0xD9D6CC)
+    /// Logo horizontal: 150 pt ≈ 53 mm (Mindestbreite im Druck 35 mm).
+    private let logoSize = CGSize(width: 150, height: 30)
 
     init(context: UIGraphicsPDFRendererContext, document: OfferDocument) {
         self.context = context
@@ -43,7 +49,7 @@ private final class PDFPageWriter {
 
     private var pageWidth: CGFloat { PDFRenderer.pageSize.width }
     private var contentWidth: CGFloat { pageWidth - margin * 2 }
-    private var bottomLimit: CGFloat { PDFRenderer.pageSize.height - margin - 20 }
+    private var bottomLimit: CGFloat { PDFRenderer.pageSize.height - margin - 28 }
 
     // MARK: - Ablauf
 
@@ -82,18 +88,21 @@ private final class PDFPageWriter {
         let letterhead = attributed(document.letterhead.joined(separator: "\n"), size: 8.5, color: muted, alignment: .right)
         let letterheadHeight = draw(letterhead, at: CGPoint(x: pageWidth - margin - letterheadWidth, y: y), width: letterheadWidth)
 
-        let title = attributed(document.title, size: 20, weight: .bold, color: navy)
-        let titleWidth = contentWidth - letterheadWidth - 16
-        var leftHeight = draw(title, at: CGPoint(x: margin, y: y), width: titleWidth)
+        // Logo oben links; Schutzzone = Höhe der Sonnenkuppel bleibt frei.
+        OstsichtBrand.draw(.horizontal, in: CGRect(origin: CGPoint(x: margin, y: y), size: logoSize), context: context.cgContext)
+        y += max(letterheadHeight, logoSize.height) + 24
+
+        let title = attributed(document.title, size: 20, weight: .semibold, color: text)
+        var titleHeight = draw(title, at: CGPoint(x: margin, y: y), width: contentWidth)
         let subtitle = attributed(document.subtitle, size: 10.5, color: muted)
-        leftHeight += draw(subtitle, at: CGPoint(x: margin, y: y + leftHeight + 2), width: titleWidth) + 2
-        y += max(letterheadHeight, leftHeight) + 14
+        titleHeight += draw(subtitle, at: CGPoint(x: margin, y: y + titleHeight + 2), width: contentWidth) + 2
+        y += titleHeight + 14
 
         if let note = document.confidentialityNote {
             let noteText = attributed(note, size: 9.5, weight: .semibold, color: .white)
             let height = measure(noteText, width: contentWidth - 16) + 10
-            UIColor.systemRed.setFill()
-            UIBezierPath(roundedRect: CGRect(x: margin, y: y, width: contentWidth, height: height), cornerRadius: 4).fill()
+            text.setFill()
+            UIBezierPath(roundedRect: CGRect(x: margin, y: y, width: contentWidth, height: height), cornerRadius: 2).fill()
             draw(noteText, at: CGPoint(x: margin + 8, y: y + 5), width: contentWidth - 16)
             y += height + 12
         }
@@ -120,6 +129,8 @@ private final class PDFPageWriter {
 
     private func drawFooter() {
         let footerY = PDFRenderer.pageSize.height - margin + 6
+        // Grüne Horizontlinie als Abschluss, darunter die Kontaktdaten.
+        line(at: footerY - 7, color: gruen, width: 1.5)
         let footer = attributed(document.footer, size: 7.5, color: muted)
         draw(footer, at: CGPoint(x: margin, y: footerY), width: contentWidth - 60)
         let page = attributed("Seite \(pageNumber)", size: 7.5, color: muted, alignment: .right)
@@ -132,12 +143,12 @@ private final class PDFPageWriter {
         if section.startsOnNewPage && y > margin + 160 {
             beginPage()
         }
-        let title = attributed(section.title, size: 13.5, weight: .bold, color: navy)
+        let title = attributed(section.title, size: 13.5, weight: .semibold, color: text)
         let height = measure(title, width: contentWidth)
         ensureSpace(height + 50)
         draw(title, at: CGPoint(x: margin, y: y), width: contentWidth)
         y += height + 3
-        line(at: y, color: navy, width: 1)
+        line(at: y, color: gruen, width: 1)
         y += 9
         for block in section.blocks {
             drawBlock(block)
@@ -158,7 +169,7 @@ private final class PDFPageWriter {
                 let bullet = attributed(item, size: 9.5, color: text)
                 let height = measure(bullet, width: contentWidth - 14)
                 ensureSpace(height)
-                draw(attributed("•", size: 9.5, color: navy), at: CGPoint(x: margin + 2, y: y), width: 10)
+                draw(attributed("•", size: 9.5, color: gruen), at: CGPoint(x: margin + 2, y: y), width: 10)
                 draw(bullet, at: CGPoint(x: margin + 14, y: y), width: contentWidth - 14)
                 y += height + 3
             }
@@ -178,9 +189,9 @@ private final class PDFPageWriter {
         let labelWidth = contentWidth * 0.62
         let valueWidth = contentWidth - labelWidth
         for pair in pairs {
-            let weight: UIFont.Weight = pair.emphasized ? .bold : .regular
+            let weight: UIFont.Weight = pair.emphasized ? .semibold : .regular
             let label = attributed(pair.label, size: pair.emphasized ? 10.5 : 9.5, weight: weight, color: pair.emphasized ? text : muted)
-            let value = attributed(pair.value, size: pair.emphasized ? 10.5 : 9.5, weight: pair.emphasized ? .bold : .medium, color: text, alignment: .right)
+            let value = attributed(pair.value, size: pair.emphasized ? 10.5 : 9.5, weight: pair.emphasized ? .semibold : .medium, color: text, alignment: .right)
             let height = max(measure(label, width: labelWidth), measure(value, width: valueWidth))
             ensureSpace(height + 4)
             if pair.emphasized {
@@ -234,14 +245,14 @@ private final class PDFPageWriter {
         let headerHeight = rowHeight(header)
         let firstRowHeight = table.rows.first.map { rowHeight(cells($0, header: false)) } ?? 0
         ensureSpace(headerHeight + firstRowHeight)
-        drawRow(header, height: headerHeight, fill: navy)
+        drawRow(header, height: headerHeight, fill: gruen)
 
         for (index, values) in table.rows.enumerated() {
             let row = cells(values, header: false)
             let height = rowHeight(row)
             if y + height > bottomLimit {
                 beginPage()
-                drawRow(header, height: headerHeight, fill: navy)
+                drawRow(header, height: headerHeight, fill: gruen)
             }
             drawRow(row, height: height, fill: index.isMultiple(of: 2) ? nil : stripe)
         }
@@ -250,9 +261,10 @@ private final class PDFPageWriter {
     }
 
     private func drawNotice(title: String, message: String, severity: WarningSeverity) {
+        // Orange nur als Fläche/Balken, nie als Textfarbe.
         let color: UIColor = switch severity {
-        case .info: .systemBlue
-        case .warnung: .systemOrange
+        case .info: gruen
+        case .warnung: sonne
         case .kritisch: .systemRed
         }
         let titleText = attributed(title, size: 9.5, weight: .semibold, color: text)
@@ -337,7 +349,7 @@ private final class PDFPageWriter {
         paragraph.lineBreakMode = .byWordWrapping
         paragraph.lineSpacing = 1.5
         return NSAttributedString(string: string, attributes: [
-            .font: UIFont.systemFont(ofSize: size, weight: weight),
+            .font: BrandFont.uiFont(size: size, weight: weight),
             .foregroundColor: color,
             .paragraphStyle: paragraph
         ])

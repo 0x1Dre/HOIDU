@@ -26,7 +26,7 @@ struct PhotoGalleryEditor: View {
         VStack(alignment: .leading, spacing: 12) {
             if photos.isEmpty {
                 Text("Noch keine Fotos. Fotografieren Sie die geplante Montageposition direkt vor Ort.")
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(.secondary)
             } else {
                 LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
@@ -37,7 +37,7 @@ struct PhotoGalleryEditor: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 PhotoThumbnail(photo: photo, size: 110)
                                 Text(photo.caption.isEmpty ? "Ohne Beschriftung" : photo.caption)
-                                    .font(.caption)
+                                    .font(.brand(.caption))
                                     .lineLimit(2)
                                     .foregroundStyle(.primary)
                                     .frame(width: 110, alignment: .leading)
@@ -73,7 +73,7 @@ struct PhotoGalleryEditor: View {
 
             if !CameraAccess.isCameraAvailable {
                 Label("Auf diesem Gerät ist keine Kamera verfügbar. Fotos können aus der Mediathek gewählt werden.", systemImage: "camera.badge.ellipsis")
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(.secondary)
             }
             if isImporting {
@@ -81,7 +81,7 @@ struct PhotoGalleryEditor: View {
             }
             if let importError {
                 Text(importError)
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(.red)
             }
         }

@@ -10,6 +10,7 @@ struct CCTVOfferCalculatorApp: App {
     init() {
         persistence = PersistenceController.makeContainer()
         ExportService.removeTemporaryExports()
+        BrandFont.applyAppearance()
     }
 
     var body: some Scene {
@@ -17,7 +18,8 @@ struct CCTVOfferCalculatorApp: App {
             RootView(storageError: persistence.errorMessage)
                 .environment(settings)
                 .environment(router)
-                .tint(Theme.navy)
+                .font(.brand(.body))
+                .tint(Theme.gruen)
         }
         .modelContainer(persistence.container)
     }

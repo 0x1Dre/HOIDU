@@ -342,18 +342,18 @@ struct ProjectHeaderCard: View {
             HStack {
                 StatusBadge(status: record.status)
                 if record.isDemo {
-                    Text("Demo-Projekt").font(.caption).foregroundStyle(.purple)
+                    Text("Demo-Projekt").font(.brand(.caption)).foregroundStyle(Theme.grau)
                 }
             }
             Text(record.customer.displayName)
-                .font(.title2.weight(.semibold))
+                .font(.brand(.title2).weight(.semibold))
             if !record.customer.contactPerson.isEmpty && !record.customer.company.isEmpty {
                 Text(record.customer.contactPerson).foregroundStyle(.secondary)
             }
             Text([record.objectType.label, record.siteAddressLine].filter { !$0.isEmpty }.joined(separator: " · "))
                 .foregroundStyle(.secondary)
             Text("Begehung \(Format.date(record.surveyDate))")
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(.secondary)
         }
     }
@@ -371,8 +371,8 @@ struct ProjectHeaderCard: View {
 
     private func metric(_ value: String, _ label: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(value).font(.title3.weight(.bold)).monospacedDigit()
-            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(value).font(.brand(.title3).weight(.semibold)).monospacedDigit()
+            Text(label).font(.brand(.caption)).foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
     }
@@ -403,16 +403,16 @@ struct ProjectPhotosOverview: View {
             ForEach(record.areas) { area in
                 if !area.allPhotos.isEmpty || !area.positions.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text(area.name).font(.headline)
+                        Text(area.name).font(.brand(.headline))
                         if !area.photos.isEmpty {
                             photoStrip(area.photos, title: "Übersicht")
                         }
                         ForEach(area.positions) { position in
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(position.label).font(.subheadline.weight(.semibold))
+                                Text(position.label).font(.brand(.subheadline).weight(.semibold))
                                 if !position.detailLines.isEmpty {
                                     Text(position.detailLines.joined(separator: " · "))
-                                        .font(.caption)
+                                        .font(.brand(.caption))
                                         .foregroundStyle(.secondary)
                                 }
                                 photoStrip(position.photos, title: nil)
@@ -438,7 +438,7 @@ struct ProjectPhotosOverview: View {
     @ViewBuilder
     private func photoStrip(_ photos: [PhotoRecord], title: String?) -> some View {
         if photos.isEmpty {
-            Text("Keine Fotos").font(.caption).foregroundStyle(.tertiary)
+            Text("Keine Fotos").font(.brand(.caption)).foregroundStyle(.tertiary)
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
@@ -449,7 +449,7 @@ struct ProjectPhotosOverview: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 PhotoThumbnail(photo: photo, size: 120)
                                 Text(photo.caption.isEmpty ? (title ?? "Foto") : photo.caption)
-                                    .font(.caption)
+                                    .font(.brand(.caption))
                                     .lineLimit(1)
                                     .frame(width: 120, alignment: .leading)
                             }
@@ -478,7 +478,7 @@ struct PhotoViewer: View {
                     Text(photo.note)
                 }
                 Text(photo.capturedAt.formatted(date: .long, time: .shortened))
-                    .font(.caption)
+                    .font(.brand(.caption))
                     .foregroundStyle(.secondary)
             }
             .padding()

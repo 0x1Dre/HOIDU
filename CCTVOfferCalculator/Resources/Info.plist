@@ -15,6 +15,12 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<false/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Barlow-Regular.ttf</string>
+		<string>Barlow-Medium.ttf</string>
+		<string>Barlow-SemiBold.ttf</string>
+	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

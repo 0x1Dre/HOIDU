@@ -2,27 +2,58 @@ import SwiftUI
 import UIKit
 import CCTVCore
 
+/// Gestaltung nach dem Ostsicht-Manual (CI/CD).
+///
+/// Farben: Grün trägt die Marke, Orange (Sonne) ist das Licht und wird sparsam eingesetzt.
+/// Faustregel pro Fläche: 60 % Weiss/Kalk, 30 % Grün und Anthrazit, höchstens 10 % Orange.
+/// Orange ist nie Textfarbe – für orangen Text gibt es `sonneText`. Auf Orange steht Anthrazit, nie Weiss.
 enum Theme {
-    static let navy = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.45, green: 0.62, blue: 0.92, alpha: 1)
-            : UIColor(red: 0.06, green: 0.17, blue: 0.36, alpha: 1)
-    })
-    static let navySolid = Color(red: 0.06, green: 0.17, blue: 0.36)
-    static let background = Color(uiColor: .systemGroupedBackground)
-    static let card = Color(uiColor: .secondarySystemGroupedBackground)
+    // MARK: Markenfarben (fix, für Flächen)
+
+    /// Ostsicht Grün #1B7A44 – Hauptfarbe. Weisse Schrift darauf ist gut lesbar.
+    static let gruenSolid = Color(uiColor: OstsichtColor.gruen)
+    /// Sonnen-Orange #F29A1F – nur für Flächen und Akzente, nie für Text.
+    static let sonne = Color(uiColor: OstsichtColor.sonne)
+    /// Anthrazit #22272B
+    static let anthrazitSolid = Color(uiColor: OstsichtColor.anthrazit)
+    /// Grau #5F6368
+    static let grauSolid = Color(uiColor: OstsichtColor.grau)
+    /// Kalk #F4F2EC
+    static let kalk = Color(uiColor: OstsichtColor.kalk)
+
+    // MARK: Dynamische Farben (Text, Symbole, Tint – hell und dunkel lesbar)
+
+    /// Grün für Text, Symbole und Tint. Im Dunkelmodus aufgehellt.
+    static let gruen = Color(uiColor: OstsichtColor.gruenText)
+    /// Oranger Text («sonne-text»). Hell #9C5600, dunkel #F5B04D.
+    static let sonneText = Color(uiColor: OstsichtColor.sonneText)
+    /// Anthrazit für Text und Symbole, im Dunkelmodus hell.
+    static let anthrazit = Color(uiColor: OstsichtColor.anthrazitText)
+    /// Grau für Nebentext.
+    static let grau = Color(uiColor: OstsichtColor.grauText)
+
+    // MARK: Flächen
+
+    static let background = Color(uiColor: OstsichtColor.background)
+    static let card = Color(uiColor: OstsichtColor.card)
     static let subtle = Color(uiColor: .tertiarySystemFill)
     static let separator = Color(uiColor: .separator)
-    static let success = Color(red: 0.13, green: 0.55, blue: 0.33)
+    static let success = gruen
+    static let error = Color(uiColor: .systemRed)
 
-    static let cornerRadius: CGFloat = 16
+    // MARK: Form
+
+    /// Ecken eher kantig (2–8 px), passend zur technischen Schrift.
+    static let cornerRadius: CGFloat = 8
+    static let controlRadius: CGFloat = 6
+    static let smallRadius: CGFloat = 4
     static let minimumTouchTarget: CGFloat = 48
 
     static func color(for severity: WarningSeverity) -> Color {
         switch severity {
-        case .info: .blue
-        case .warnung: .orange
-        case .kritisch: .red
+        case .info: gruen
+        case .warnung: sonneText
+        case .kritisch: error
         }
     }
 
@@ -36,24 +67,147 @@ enum Theme {
 
     static func color(for score: Int) -> Color {
         switch FitLevel(score: score) {
-        case .sehrGut: success
-        case .geeignet: .blue
-        case .bedingt: .orange
-        case .nichtEmpfohlen: .red
+        case .sehrGut: gruen
+        case .geeignet: anthrazit
+        case .bedingt: sonneText
+        case .nichtEmpfohlen: error
         }
     }
 
     static func color(for status: ProjectStatus) -> Color {
         switch status {
-        case .entwurf: .gray
-        case .erfasst: .blue
-        case .offeriert: .orange
-        case .gewonnen: success
-        case .verloren: .red
+        case .entwurf: grau
+        case .erfasst: anthrazit
+        case .offeriert: sonneText
+        case .gewonnen: gruen
+        case .verloren: error
         case .archiviert: .secondary
         }
     }
 }
+
+/// Markenfarben als `UIColor`, auch für den PDF-Export.
+enum OstsichtColor {
+    static var gruen: UIColor { UIColor(hex: 0x1B7A44) }
+    static var sonne: UIColor { UIColor(hex: 0xF29A1F) }
+    static var anthrazit: UIColor { UIColor(hex: 0x22272B) }
+    static var grau: UIColor { UIColor(hex: 0x5F6368) }
+    static var kalk: UIColor { UIColor(hex: 0xF4F2EC) }
+    /// Helle Zusatzzeile auf Grün (aus dem Negativ-Logo).
+    static var gruenHell: UIColor { UIColor(hex: 0xE3F1E8) }
+    /// Oranger Text auf Weiss/Kalk (Kontrast ≥ 4.5:1).
+    static var sonneTextFix: UIColor { UIColor(hex: 0x9C5600) }
+
+    static var gruenText: UIColor { UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0x5BBF86) : gruen } }
+    static var sonneText: UIColor { UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0xF5B04D) : sonneTextFix } }
+    static var anthrazitText: UIColor { UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0xE8E9EA) : anthrazit } }
+    static var grauText: UIColor { UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0xA3A7AC) : grau } }
+    static var background: UIColor { UIColor { $0.userInterfaceStyle == .dark ? .systemGroupedBackground : kalk } }
+    static var card: UIColor { UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemGroupedBackground : .white } }
+}
+
+extension UIColor {
+    convenience init(hex: UInt32) {
+        self.init(
+            red: CGFloat((hex >> 16) & 0xFF) / 255,
+            green: CGFloat((hex >> 8) & 0xFF) / 255,
+            blue: CGFloat(hex & 0xFF) / 255,
+            alpha: 1
+        )
+    }
+}
+
+// MARK: - Schrift (Barlow)
+
+/// Hausschrift Barlow: Titel SemiBold (600), Fliesstext Regular (400), Labels Medium (500).
+/// Kein Bold und kein Kursiv – Hervorhebungen in SemiBold.
+enum BrandFont {
+    static let family = "Barlow"
+    static let regular = "Barlow-Regular"
+    static let medium = "Barlow-Medium"
+    static let semibold = "Barlow-SemiBold"
+
+    /// `UIFont` in Barlow; fällt auf die Systemschrift zurück, falls die Datei fehlt.
+    static func uiFont(size: CGFloat, weight: UIFont.Weight = .regular) -> UIFont {
+        let name: String
+        switch weight {
+        case .medium: name = medium
+        case .semibold, .bold, .heavy, .black: name = semibold
+        default: name = regular
+        }
+        return UIFont(name: name, size: size) ?? .systemFont(ofSize: size, weight: weight)
+    }
+
+    /// Mit Dynamic Type skalierte Barlow-Schrift für UIKit (Navigationsleiste, Tab-Leiste).
+    static func scaledUIFont(_ style: UIFont.TextStyle, size: CGFloat, weight: UIFont.Weight) -> UIFont {
+        UIFontMetrics(forTextStyle: style).scaledFont(for: uiFont(size: size, weight: weight))
+    }
+
+    static func size(for style: Font.TextStyle) -> CGFloat {
+        switch style {
+        case .largeTitle: 34
+        case .title: 28
+        case .title2: 22
+        case .title3: 20
+        case .headline: 17
+        case .body: 17
+        case .callout: 16
+        case .subheadline: 15
+        case .footnote: 13
+        case .caption: 12
+        case .caption2: 11
+        @unknown default: 17
+        }
+    }
+
+    /// Wendet Barlow auf Navigations- und Tab-Leisten an. Einmal beim App-Start aufrufen.
+    @MainActor
+    static func applyAppearance() {
+        let navigation = UINavigationBar.appearance()
+        navigation.largeTitleTextAttributes = [
+            .font: scaledUIFont(.largeTitle, size: 34, weight: .semibold),
+            .foregroundColor: OstsichtColor.anthrazitText
+        ]
+        navigation.titleTextAttributes = [
+            .font: scaledUIFont(.headline, size: 17, weight: .semibold),
+            .foregroundColor: OstsichtColor.anthrazitText
+        ]
+        let tabFont = uiFont(size: 11, weight: .medium)
+        UITabBarItem.appearance().setTitleTextAttributes([.font: tabFont], for: .normal)
+        UITabBarItem.appearance().setTitleTextAttributes([.font: tabFont], for: .selected)
+        UISegmentedControl.appearance().setTitleTextAttributes([.font: uiFont(size: 14, weight: .medium)], for: .normal)
+    }
+}
+
+extension Font {
+    /// Barlow im passenden Schnitt für den Textstil, skaliert mit Dynamic Type.
+    /// Titel und Headline in SemiBold, alles andere Regular.
+    static func brand(_ style: Font.TextStyle) -> Font {
+        let base = Font.custom(BrandFont.family, size: BrandFont.size(for: style), relativeTo: style)
+        switch style {
+        case .largeTitle, .title, .title2, .title3, .headline:
+            return base.weight(.semibold)
+        default:
+            return base
+        }
+    }
+
+    /// Label-Stil: Barlow Medium in Grossbuchstaben mit Sperrung (mit `.brandLabel()` kombinieren).
+    static func brandLabel(_ style: Font.TextStyle = .caption) -> Font {
+        Font.custom(BrandFont.family, size: BrandFont.size(for: style), relativeTo: style).weight(.medium)
+    }
+}
+
+extension View {
+    /// Labels und Zusatzzeilen: Barlow Medium, Grossbuchstaben, etwas Sperrung.
+    func brandLabel(_ style: Font.TextStyle = .caption) -> some View {
+        font(.brandLabel(style))
+            .textCase(.uppercase)
+            .tracking(1.2)
+    }
+}
+
+// MARK: - Karten und Buttons
 
 struct CardModifier: ViewModifier {
     var padding: CGFloat = 16
@@ -76,19 +230,19 @@ extension View {
     }
 }
 
-/// Grosse, gut treffbare Hauptaktion.
+/// Grosse, gut treffbare Hauptaktion: Grün mit weisser Schrift.
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
+            .font(.brand(.headline))
             .foregroundStyle(.white)
             .frame(minHeight: Theme.minimumTouchTarget)
             .padding(.horizontal, 20)
             .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(isEnabled ? Theme.navySolid : Color.gray.opacity(0.5))
+                RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                    .fill(isEnabled ? Theme.gruenSolid : Theme.grauSolid.opacity(0.5))
             )
             .opacity(configuration.isPressed ? 0.8 : 1)
             .contentShape(Rectangle())
@@ -98,13 +252,13 @@ struct PrimaryButtonStyle: ButtonStyle {
 struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
-            .foregroundStyle(Theme.navy)
+            .font(.brand(.headline))
+            .foregroundStyle(Theme.gruen)
             .frame(minHeight: Theme.minimumTouchTarget)
             .padding(.horizontal, 20)
             .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Theme.subtle)
+                RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                    .strokeBorder(Theme.gruen, lineWidth: 1.5)
             )
             .opacity(configuration.isPressed ? 0.7 : 1)
             .contentShape(Rectangle())
@@ -120,14 +274,19 @@ struct ActionLabel: View {
 
     var body: some View {
         Label(title, systemImage: systemImage)
-            .font(.headline)
-            .foregroundStyle(prominent ? Color.white : Theme.navy)
+            .font(.brand(.headline))
+            .foregroundStyle(prominent ? Color.white : Theme.gruen)
             .frame(maxWidth: .infinity, minHeight: Theme.minimumTouchTarget)
             .padding(.horizontal, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(prominent ? Theme.navySolid : Theme.subtle)
-            )
+            .background {
+                if prominent {
+                    RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                        .fill(Theme.gruenSolid)
+                } else {
+                    RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                        .strokeBorder(Theme.gruen, lineWidth: 1.5)
+                }
+            }
             .contentShape(Rectangle())
     }
 }

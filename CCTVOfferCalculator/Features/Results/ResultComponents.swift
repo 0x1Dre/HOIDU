@@ -10,12 +10,12 @@ struct TechnicalRecommendationCard: View {
             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                 HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "checkmark.seal.fill")
-                        .foregroundStyle(Theme.navy)
+                        .foregroundStyle(Theme.gruen)
                         .accessibilityHidden(true)
                     Text(line)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .font(.subheadline)
+                .font(.brand(.subheadline))
             }
         }
         .card()
@@ -31,9 +31,9 @@ struct ScoreCardView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(score.manufacturer.label)
-                        .font(.title3.weight(.semibold))
+                        .font(.brand(.title3).weight(.semibold))
                     Text(score.fit.label)
-                        .font(.subheadline)
+                        .font(.brand(.subheadline))
                         .foregroundStyle(Theme.color(for: score.score))
                 }
                 Spacer()
@@ -43,7 +43,7 @@ struct ScoreCardView: View {
                 .tint(Theme.color(for: score.score))
                 .accessibilityHidden(true)
             Text(score.rationale)
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if !score.pros.isEmpty {
@@ -54,14 +54,14 @@ struct ScoreCardView: View {
             }
             ForEach(score.warnings, id: \.self) { warning in
                 Label(warning, systemImage: "exclamationmark.triangle.fill")
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .font(.brand(.footnote))
+                    .foregroundStyle(Theme.sonneText)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if isRecommended {
                 Label("Empfohlen", systemImage: "star.fill")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Theme.navy)
+                    .font(.brand(.footnote).weight(.semibold))
+                    .foregroundStyle(Theme.gruen)
             }
         }
         .card()
@@ -80,10 +80,10 @@ struct FactorList: View {
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: systemImage)
                         .foregroundStyle(tint)
-                        .font(.footnote)
+                        .font(.brand(.footnote))
                         .accessibilityHidden(true)
                     Text(item)
-                        .font(.footnote)
+                        .font(.brand(.footnote))
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -100,20 +100,20 @@ struct VariantSummaryCard: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(variant.tier.label)
-                    .font(.title3.weight(.bold))
+                    .font(.brand(.title3).weight(.semibold))
                 if isRecommended {
                     Text("Empfohlen")
-                        .font(.caption.weight(.semibold))
+                        .font(.brand(.caption).weight(.semibold))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Theme.navySolid, in: Capsule())
+                        .background(Theme.gruenSolid, in: RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
                         .foregroundStyle(.white)
                 }
                 Spacer()
                 ScoreBadge(score: variant.score.score)
             }
             Text("\(variant.manufacturer.label)\(variant.isManualSelection ? " (manuell gewählt)" : "") · \(variant.selection.cameraCount) Kameras")
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(.secondary)
             Divider()
             LabeledValueRow(label: "Einmalig exkl. MWST", value: Format.chf(variant.totals.netAfterDiscount))
@@ -128,14 +128,14 @@ struct VariantSummaryCard: View {
             }
             if !variant.selection.warnings.isEmpty {
                 Label("\(variant.selection.warnings.count) Kompromisse – Details in den Positionen", systemImage: "exclamationmark.triangle")
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .font(.brand(.footnote))
+                    .foregroundStyle(Theme.sonneText)
             }
         }
         .card()
         .overlay(
             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                .strokeBorder(isRecommended ? Theme.navy : .clear, lineWidth: 2)
+                .strokeBorder(isRecommended ? Theme.gruen : .clear, lineWidth: 2)
         )
         .accessibilityElement(children: .combine)
     }
@@ -151,7 +151,7 @@ struct WarningsCard: View {
             if warnings.isEmpty {
                 Label("Keine Warnungen für dieses Projekt.", systemImage: "checkmark.circle")
                     .foregroundStyle(Theme.success)
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
             } else {
                 ForEach(warnings) { warning in
                     WarningRow(warning: warning)
@@ -184,8 +184,8 @@ struct ComparisonTableView: View {
                 ForEach(analysis.comparison) { row in
                     GridRow {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(row.manufacturer.label).font(.headline)
-                            Text(row.score.fit.label).font(.caption).foregroundStyle(.secondary)
+                            Text(row.manufacturer.label).font(.brand(.headline))
+                            Text(row.score.fit.label).font(.brand(.caption)).foregroundStyle(.secondary)
                         }
                         ScoreBadge(score: row.score.score)
                         ForEach(OfferTier.allCases) { tier in
@@ -212,7 +212,7 @@ struct ComparisonTableView: View {
 
     private func header(_ text: String) -> some View {
         Text(text)
-            .font(.subheadline.weight(.semibold))
+            .font(.brand(.subheadline).weight(.semibold))
             .foregroundStyle(.secondary)
     }
 }
@@ -227,8 +227,8 @@ struct ComparisonCellText: View {
         let spoken = total.map { Format.chf($0) } ?? "nicht verfügbar"
         Text(text)
             .monospacedDigit()
-            .fontWeight(isChosen ? .bold : .regular)
-            .foregroundStyle(isChosen ? Theme.navy : Color.primary)
+            .fontWeight(isChosen ? .semibold : .regular)
+            .foregroundStyle(isChosen ? Theme.gruen : Color.primary)
             .accessibilityLabel(isChosen ? "\(tier.label): \(spoken), gewählte Variante" : "\(tier.label): \(spoken)")
     }
 }
@@ -289,7 +289,7 @@ struct VariantDetailView: View {
                     ForEach(variant.labor, id: \.kind) { estimate in
                         VStack(alignment: .leading, spacing: 2) {
                             LabeledValueRow(label: estimate.kind.label, value: Format.hours(estimate.hours))
-                            Text(estimate.basis).font(.caption).foregroundStyle(.secondary)
+                            Text(estimate.basis).font(.brand(.caption)).foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -298,12 +298,12 @@ struct VariantDetailView: View {
             if !variant.selection.notes.isEmpty || !variant.selection.warnings.isEmpty {
                 Section("Hinweise zur Variante") {
                     ForEach(variant.selection.notes, id: \.self) { note in
-                        Label(note, systemImage: "info.circle").font(.subheadline)
+                        Label(note, systemImage: "info.circle").font(.brand(.subheadline))
                     }
                     ForEach(variant.selection.warnings, id: \.self) { warning in
                         Label(warning, systemImage: "exclamationmark.triangle.fill")
-                            .font(.subheadline)
-                            .foregroundStyle(.orange)
+                            .font(.brand(.subheadline))
+                            .foregroundStyle(Theme.sonneText)
                     }
                 }
             }
@@ -321,15 +321,15 @@ struct LineItemRow: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline) {
                 Text("\(item.position).")
-                    .font(.subheadline.monospacedDigit())
+                    .font(.brand(.subheadline).monospacedDigit())
                     .foregroundStyle(.secondary)
                     .frame(width: 30, alignment: .leading)
                 Text(item.description)
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Text(Format.chf(item.totalSell))
-                    .font(.subheadline.monospacedDigit().weight(.semibold))
+                    .font(.brand(.subheadline).monospacedDigit().weight(.semibold))
             }
             HStack {
                 Text(item.quantityText + " × " + Format.chf(item.unitSellPrice))
@@ -337,7 +337,7 @@ struct LineItemRow: View {
                     Text("· EK \(Format.chf(item.unitPurchasePrice)) · Marge \(Format.percent(item.marginPercent))")
                 }
             }
-            .font(.caption.monospacedDigit())
+            .font(.brand(.caption).monospacedDigit())
             .foregroundStyle(.secondary)
             .padding(.leading, 30)
         }
@@ -381,31 +381,31 @@ struct MaintenanceQuoteCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(quote.package.label).font(.headline)
+                Text(quote.package.label).font(.brand(.headline))
                 Spacer()
                 if isSelected {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.navy)
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.gruen)
                         .accessibilityLabel("gewählt")
                 }
             }
             Text(Format.chf(quote.monthlyNet) + " / Monat")
-                .font(.title3.weight(.bold).monospacedDigit())
+                .font(.brand(.title3).weight(.semibold).monospacedDigit())
             Text("\(Format.chf(quote.yearlyNet)) pro Jahr · inkl. MWST \(Format.chf(quote.yearlyInclVAT))")
-                .font(.caption)
+                .font(.brand(.caption))
                 .foregroundStyle(.secondary)
             Text("Reaktionszeit: \(quote.responseTime)")
-                .font(.caption)
+                .font(.brand(.caption))
             Divider()
             ForEach(quote.services, id: \.self) { service in
                 Label(service, systemImage: "checkmark")
-                    .font(.caption)
+                    .font(.brand(.caption))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(isSelected ? Theme.navySolid.opacity(0.08) : Theme.subtle.opacity(0.5), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(isSelected ? Theme.navy : .clear, lineWidth: 2))
+        .background(isSelected ? Theme.gruenSolid.opacity(0.08) : Theme.subtle.opacity(0.5), in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous).strokeBorder(isSelected ? Theme.gruen : .clear, lineWidth: 2))
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)

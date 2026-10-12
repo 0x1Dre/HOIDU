@@ -118,7 +118,7 @@ final class ProjectExchangeTests: XCTestCase {
         XCTAssertThrowsError(try ProjectExchange.importProject(Data("kein json".utf8))) { XCTAssertEqual($0 as? ExchangeError, .notJSON) }
         XCTAssertThrowsError(try ProjectExchange.importProject(Data(#"{"format":"anderes"}"#.utf8))) {
             XCTAssertEqual($0 as? ExchangeError, .wrongFormat)
-            XCTAssertEqual(($0 as? ExchangeError)?.errorDescription, "Die Datei ist keine Projektdatei des CCTV Offer Calculator CH.")
+            XCTAssertEqual(($0 as? ExchangeError)?.errorDescription, "Die Datei ist keine Projektdatei der Ostsicht-Offerten-App.")
         }
         let future = #"{"format":"ch.cctv-offer-calculator.project","schemaVersion":99}"#
         XCTAssertThrowsError(try ProjectExchange.importProject(Data(future.utf8))) { XCTAssertEqual($0 as? ExchangeError, .unsupportedVersion(99)) }

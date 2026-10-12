@@ -59,7 +59,7 @@ public enum ExchangeError: Error, Equatable, LocalizedError, Sendable {
         switch self {
         case .emptyFile: "Die Datei ist leer."
         case .notJSON: "Die Datei ist keine gültige JSON-Datei."
-        case .wrongFormat: "Die Datei ist keine Projektdatei des CCTV Offer Calculator CH."
+        case .wrongFormat: "Die Datei ist keine Projektdatei der Ostsicht-Offerten-App."
         case .unsupportedVersion(let version): "Die Datei wurde mit einer neueren App-Version erstellt (Format \(version)). Bitte die App aktualisieren."
         case .damaged(let detail): "Die Datei ist beschädigt oder unvollständig (\(detail))."
         }

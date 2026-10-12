@@ -11,7 +11,7 @@ struct ManufacturerProfilesView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Neutrale Kurzprofile als Beratungshilfe. Die Bewertung im Projekt berücksichtigt diese Schwerpunkte automatisch.")
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(.secondary)
                 LazyVGrid(columns: columns, alignment: .leading, spacing: 16) {
                     ForEach(ManufacturerProfiles.all) { profile in
@@ -39,34 +39,34 @@ struct ManufacturerProfileCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text(profile.manufacturer.label)
-                    .font(.title2.weight(.bold))
+                    .font(.brand(.title2).weight(.semibold))
                 Spacer()
                 Text(profile.segment)
-                    .font(.caption.weight(.semibold))
+                    .font(.brand(.caption).weight(.semibold))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Theme.subtle, in: Capsule())
+                    .background(Theme.subtle, in: RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
             }
             Text(profile.tagline)
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(.secondary)
             LabeledContent("Typische Grösse", value: profile.typicalSize)
-                .font(.subheadline)
+                .font(.brand(.subheadline))
             LabeledContent("Ökosystem", value: profile.ecosystem)
-                .font(.subheadline)
+                .font(.brand(.subheadline))
             LabeledContent("Aktive Produkte", value: "\(productCount)")
-                .font(.subheadline)
+                .font(.brand(.subheadline))
             group("Stärken", profile.strengths, "plus.circle.fill", Theme.success)
             group("Einschränkungen", profile.limitations, "minus.circle.fill", .red)
-            group("Bevorzugt, wenn", profile.preferredWhen, "hand.thumbsup.fill", Theme.navy)
-            group("Eher nicht, wenn", profile.avoidWhen, "hand.thumbsdown.fill", .orange)
+            group("Bevorzugt, wenn", profile.preferredWhen, "hand.thumbsup.fill", Theme.gruen)
+            group("Eher nicht, wenn", profile.avoidWhen, "hand.thumbsdown.fill", Theme.sonneText)
         }
         .card()
     }
 
     private func group(_ title: String, _ items: [String], _ symbol: String, _ tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.subheadline.weight(.semibold))
+            Text(title).font(.brand(.subheadline).weight(.semibold))
             FactorList(items: items, systemImage: symbol, tint: tint)
         }
     }

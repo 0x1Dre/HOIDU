@@ -19,7 +19,7 @@ PACKAGE_PATH = "Packages/CCTVCore"
 PACKAGE_PRODUCT = "CCTVCore"
 BUNDLE_ID = "ch.example.cctvoffercalculator"
 DEPLOYMENT_TARGET = "17.0"
-RESOURCE_SUFFIXES = (".xcassets", ".xcprivacy")
+RESOURCE_SUFFIXES = (".xcassets", ".xcprivacy", ".ttf")
 EXCLUDED_FILES = {"Info.plist"}
 
 
@@ -43,6 +43,8 @@ def file_type(name: str) -> str:
         return "text.xml"
     if name.endswith(".plist"):
         return "text.plist.xml"
+    if name.endswith(".ttf"):
+        return "file"
     return "text"
 
 
@@ -252,7 +254,7 @@ def main():
         "ENABLE_PREVIEWS": "YES",
         "GENERATE_INFOPLIST_FILE": "YES",
         "INFOPLIST_FILE": APP_DIR + "/Resources/Info.plist",
-        "INFOPLIST_KEY_CFBundleDisplayName": "CCTV Offerte",
+        "INFOPLIST_KEY_CFBundleDisplayName": "Ostsicht",
         "INFOPLIST_KEY_LSApplicationCategoryType": "public.app-category.business",
         "INFOPLIST_KEY_UIApplicationSceneManifest_Generation": "YES",
         "INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents": "YES",

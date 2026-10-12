@@ -30,15 +30,15 @@ struct SectionHeader: View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             if let systemImage {
                 Image(systemName: systemImage)
-                    .foregroundStyle(Theme.navy)
+                    .foregroundStyle(Theme.gruen)
                     .accessibilityHidden(true)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.title3.weight(.semibold))
+                    .font(.brand(.title3).weight(.semibold))
                 if let subtitle {
                     Text(subtitle)
-                        .font(.subheadline)
+                        .font(.brand(.subheadline))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -53,20 +53,20 @@ struct StatTile: View {
     let title: String
     let value: String
     let systemImage: String
-    var tint: Color = Theme.navy
+    var tint: Color = Theme.gruen
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Image(systemName: systemImage)
-                .font(.title2)
+                .font(.brand(.title2))
                 .foregroundStyle(tint)
                 .accessibilityHidden(true)
             Text(value)
-                .font(.title.weight(.bold))
+                .font(.brand(.title).weight(.semibold))
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
             Text(title)
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(.secondary)
         }
         .card()
@@ -80,14 +80,14 @@ struct PrivacyNoticeCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "hand.raised.fill")
-                .font(.title3)
-                .foregroundStyle(Theme.navy)
+                .font(.brand(.title3))
+                .foregroundStyle(Theme.gruen)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 6) {
                 Text("Datenschutz – Verantwortung des Kunden")
-                    .font(.headline)
+                    .font(.brand(.headline))
                 Text(PrivacyText.responsibilityNotice)
-                    .font(compact ? .footnote : .subheadline)
+                    .font(compact ? .brand(.footnote) : .brand(.subheadline))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -104,17 +104,17 @@ struct WarningRow: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: Theme.symbol(for: warning.severity))
                 .foregroundStyle(Theme.color(for: warning.severity))
-                .font(.title3)
+                .font(.brand(.title3))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(warning.title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.brand(.subheadline).weight(.semibold))
                 Text(warning.message)
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("\(warning.category.label) · \(warning.severity.label)")
-                    .font(.caption)
+                    .font(.brand(.caption))
                     .foregroundStyle(.tertiary)
             }
         }
@@ -131,17 +131,17 @@ struct ValidationBanner: View {
         if !issues.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 Label("Bitte prüfen", systemImage: "exclamationmark.circle.fill")
-                    .font(.headline)
+                    .font(.brand(.headline))
                     .foregroundStyle(.red)
                 ForEach(issues) { issue in
                     Text("• " + issue.message)
-                        .font(.subheadline)
+                        .font(.brand(.subheadline))
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.red.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Color.red.opacity(0.1), in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
             .accessibilityElement(children: .combine)
         }
     }
@@ -153,7 +153,7 @@ struct FieldError: View {
     var body: some View {
         if let message {
             Text(message)
-                .font(.footnote)
+                .font(.brand(.footnote))
                 .foregroundStyle(.red)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -165,10 +165,10 @@ struct StatusBadge: View {
 
     var body: some View {
         Text(status.label)
-            .font(.caption.weight(.semibold))
+            .font(.brand(.caption).weight(.semibold))
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
-            .background(Theme.color(for: status).opacity(0.15), in: Capsule())
+            .background(Theme.color(for: status).opacity(0.15), in: RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
             .foregroundStyle(Theme.color(for: status))
             .accessibilityLabel("Status: \(status.label)")
     }
@@ -179,9 +179,9 @@ struct ScoreBadge: View {
 
     var body: some View {
         Text("\(score)")
-            .font(.headline.monospacedDigit())
+            .font(.brand(.headline).monospacedDigit())
             .frame(minWidth: 44, minHeight: 32)
-            .background(Theme.color(for: score).opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+            .background(Theme.color(for: score).opacity(0.15), in: RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
             .foregroundStyle(Theme.color(for: score))
             .accessibilityLabel("Bewertung \(score) von 100")
     }
@@ -199,10 +199,10 @@ struct LabeledValueRow: View {
             Spacer()
             Text(value)
                 .monospacedDigit()
-                .fontWeight(emphasized ? .bold : .regular)
+                .fontWeight(emphasized ? .semibold : .regular)
                 .multilineTextAlignment(.trailing)
         }
-        .font(emphasized ? .headline : .subheadline)
+        .font(emphasized ? .brand(.headline) : .brand(.subheadline))
         .accessibilityElement(children: .combine)
     }
 }

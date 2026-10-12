@@ -41,7 +41,7 @@ struct ProjectListView: View {
                     } label: {
                         Label("Duplizieren", systemImage: "plus.square.on.square")
                     }
-                    .tint(.blue)
+                    .tint(Theme.anthrazitSolid)
                 }
             }
         }
@@ -150,27 +150,27 @@ struct ProjectRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: project.objectType.systemImage)
-                .font(.title2)
-                .foregroundStyle(Theme.navy)
+                .font(.brand(.title2))
+                .foregroundStyle(Theme.gruen)
                 .frame(width: 40, height: 40)
-                .background(Theme.subtle, in: RoundedRectangle(cornerRadius: 10))
+                .background(Theme.subtle, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(project.displayTitle)
-                        .font(.headline)
+                        .font(.brand(.headline))
                         .lineLimit(2)
                     if project.isDemo {
                         Text("Demo")
-                            .font(.caption2.weight(.bold))
+                            .font(.brand(.caption2).weight(.semibold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.purple.opacity(0.15), in: Capsule())
-                            .foregroundStyle(.purple)
+                            .background(Theme.grau.opacity(0.15), in: RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
+                            .foregroundStyle(Theme.grau)
                     }
                 }
                 Text([project.customerName, project.siteCity].filter { !$0.isEmpty }.joined(separator: " · "))
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(.secondary)
                 HStack(spacing: 10) {
                     StatusBadge(status: project.status)
@@ -182,7 +182,7 @@ struct ProjectRow: View {
                     }
                     Text(project.updatedAt.formatted(date: .abbreviated, time: .omitted))
                 }
-                .font(.caption)
+                .font(.brand(.caption))
                 .foregroundStyle(.secondary)
             }
         }

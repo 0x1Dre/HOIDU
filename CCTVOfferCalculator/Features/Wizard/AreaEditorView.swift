@@ -51,8 +51,8 @@ struct AreaEditorView: View {
                     OptionPicker(title: "Audio", selection: $area.audio, segmented: true)
                     if area.audio != .nein {
                         Label("Audio ist datenschutzrechtlich heikel. Der Kunde muss die Zulässigkeit klären.", systemImage: "exclamationmark.triangle.fill")
-                            .font(.footnote)
-                            .foregroundStyle(.orange)
+                            .font(.brand(.footnote))
+                            .foregroundStyle(Theme.sonneText)
                     }
                 } header: {
                     Text("Erkennung")
@@ -79,7 +79,7 @@ struct AreaEditorView: View {
                 Section {
                     if area.positions.isEmpty {
                         Text("Legen Sie für jede Kamera eine Position an und fotografieren Sie den geplanten Montagepunkt.")
-                            .font(.subheadline)
+                            .font(.brand(.subheadline))
                             .foregroundStyle(.secondary)
                     }
                     ForEach(area.positions) { position in
@@ -97,7 +97,7 @@ struct AreaEditorView: View {
                     .buttonStyle(.borderless)
                     if let quantityNotice {
                         Text(quantityNotice)
-                            .font(.footnote)
+                            .font(.brand(.footnote))
                             .foregroundStyle(.secondary)
                     }
                 } header: {
@@ -168,23 +168,23 @@ struct PositionRow: View {
                 PhotoThumbnail(photo: first, size: 56)
             } else {
                 Image(systemName: "camera.viewfinder")
-                    .font(.title2)
+                    .font(.brand(.title2))
                     .frame(width: 56, height: 56)
-                    .background(Theme.subtle, in: RoundedRectangle(cornerRadius: 10))
+                    .background(Theme.subtle, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                     .foregroundStyle(.secondary)
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text(position.label.isEmpty ? "Ohne Beschriftung" : position.label)
-                    .font(.headline)
+                    .font(.brand(.headline))
                 let details = position.detailLines.joined(separator: " · ")
                 if !details.isEmpty {
                     Text(details)
-                        .font(.subheadline)
+                        .font(.brand(.subheadline))
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
                 Text(position.photos.count == 1 ? "1 Foto" : "\(position.photos.count) Fotos")
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(.secondary)
             }
         }

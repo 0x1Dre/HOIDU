@@ -31,6 +31,10 @@
 			isa = PBXBuildFile;
 			fileRef = BC13C440D1995513046A48B3;
 		};
+		2561A26D01CFEA1983BB6E21 = {
+			isa = PBXBuildFile;
+			fileRef = C1876A676384DE986AC9A807;
+		};
 		25F78E9177B96DB771541684 = {
 			isa = PBXBuildFile;
 			fileRef = 9E4713CF1F2A8DD3654972B2;
@@ -54,6 +58,10 @@
 		49B7D71A7F379D243217B91C = {
 			isa = PBXBuildFile;
 			fileRef = 0976CC5D43052F11A94C21C3;
+		};
+		4AC0A1C02C006D59F70BEBDD = {
+			isa = PBXBuildFile;
+			fileRef = 25882F52C07C8F944AF6462C;
 		};
 		4C07F44A4F178A28437C9BF6 = {
 			isa = PBXBuildFile;
@@ -106,6 +114,10 @@
 		7A3A3C22FDD805424417F4E6 = {
 			isa = PBXBuildFile;
 			fileRef = AE0917346789F1FC6192E7B1;
+		};
+		7B4F920C68C77B481CD03951 = {
+			isa = PBXBuildFile;
+			fileRef = C2659D24297E6E36248EEF18;
 		};
 		7CE8EC9866330FBBF8BC9F65 = {
 			isa = PBXBuildFile;
@@ -186,6 +198,10 @@
 		D46324FFA0020BF0AF52C001 = {
 			isa = PBXBuildFile;
 			fileRef = 69349BB5FB34CAA3A668153E;
+		};
+		D70A53A2A45B57FD0BDAB0C7 = {
+			isa = PBXBuildFile;
+			fileRef = 942DCDE8D7D5B127995DB13C;
 		};
 		D9446AFEF9E8B38AAF99BCBF = {
 			isa = PBXBuildFile;
@@ -272,6 +288,12 @@
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.xml;
 			path = Info.plist;
+			sourceTree = "<group>";
+		};
+		25882F52C07C8F944AF6462C = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			path = "Barlow-SemiBold.ttf";
 			sourceTree = "<group>";
 		};
 		2C1DA8268D33C71BC8BD67D3 = {
@@ -419,6 +441,12 @@
 			path = Customer.swift;
 			sourceTree = "<group>";
 		};
+		942DCDE8D7D5B127995DB13C = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			path = "Barlow-Regular.ttf";
+			sourceTree = "<group>";
+		};
 		97C5ED04FE3B92568CC1124F = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
@@ -477,6 +505,18 @@
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
 			path = SettingsStore.swift;
+			sourceTree = "<group>";
+		};
+		C1876A676384DE986AC9A807 = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			path = "Barlow-Medium.ttf";
+			sourceTree = "<group>";
+		};
+		C2659D24297E6E36248EEF18 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = OstsichtBrand.swift;
 			sourceTree = "<group>";
 		};
 		CC4D0B54C6D8655A37A0C715 = {
@@ -675,6 +715,7 @@
 		726B627C04DC70BFA62A8908 = {
 			isa = PBXGroup;
 			children = (
+				BF378C109F49099896DAD0DB,
 				2DFA980874E0198F25E502A1,
 				1D14CD5F41B6E892CB911BD6,
 				7A1E25C8174132E2E526D3C9,
@@ -737,11 +778,22 @@
 				0976CC5D43052F11A94C21C3,
 				B920E8677EE211F7B8086E44,
 				763230D0D85A6DE24BAC83D7,
+				C2659D24297E6E36248EEF18,
 				6E7C483173F8971423FABCE5,
 				F5577ADF8B94A443E50262B1,
 				EC520B874ED19BE537D393B8,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		BF378C109F49099896DAD0DB = {
+			isa = PBXGroup;
+			children = (
+				C1876A676384DE986AC9A807,
+				942DCDE8D7D5B127995DB13C,
+				25882F52C07C8F944AF6462C,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 		D2AD7C8B6BFF9828EE8024CB = {
@@ -842,6 +894,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2561A26D01CFEA1983BB6E21,
+				D70A53A2A45B57FD0BDAB0C7,
+				4AC0A1C02C006D59F70BEBDD,
 				5A86E14F533F34542F30D8A8,
 				87B86F965833945E76E31590,
 			);
@@ -862,6 +917,7 @@
 				49B7D71A7F379D243217B91C,
 				7CE8EC9866330FBBF8BC9F65,
 				3FEBFA0A29DD1AA542437CD2,
+				7B4F920C68C77B481CD03951,
 				E069568CBE6D6C48178AA100,
 				4EFFEECA2BF594CC8A75A2BC,
 				ABA5518396C8F0D7AB5E2CBE,
@@ -1021,7 +1077,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CCTVOfferCalculator/Resources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "CCTV Offerte";
+				INFOPLIST_KEY_CFBundleDisplayName = Ostsicht;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -1056,7 +1112,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CCTVOfferCalculator/Resources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "CCTV Offerte";
+				INFOPLIST_KEY_CFBundleDisplayName = Ostsicht;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

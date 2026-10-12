@@ -12,7 +12,7 @@ struct PriceListsView: View {
         List {
             Section {
                 Label("Alle Preise sind Beispielwerte in CHF exkl. MWST. Vor der ersten Offerte mit den aktuellen Distributorpreisen abgleichen.", systemImage: "info.circle")
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(.secondary)
             }
             ForEach(Manufacturer.allCases) { manufacturer in
@@ -24,9 +24,9 @@ struct PriceListsView: View {
                                 PriceListDetailView(priceList: list)
                             } label: {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(list.name).font(.headline)
+                                    Text(list.name).font(.brand(.headline))
                                     Text("\(list.products.count) Produkte · gültig ab \(Format.date(list.validFrom))\(list.isExampleData ? " · Beispieldaten" : "")")
-                                        .font(.subheadline)
+                                        .font(.brand(.subheadline))
                                         .foregroundStyle(.secondary)
                                 }
                                 .padding(.vertical, 4)
@@ -109,7 +109,7 @@ struct PriceListDetailView: View {
                 TextField("Name der Preisliste", text: $priceList.name)
                 DatePicker("Gültig ab", selection: $priceList.validFrom, displayedComponents: .date)
                 if !priceList.note.isEmpty {
-                    Text(priceList.note).font(.footnote).foregroundStyle(.secondary)
+                    Text(priceList.note).font(.brand(.footnote)).foregroundStyle(.secondary)
                 }
             }
             ForEach(ProductCategory.allCases) { category in
@@ -206,24 +206,24 @@ struct ProductRow: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(product.name)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.brand(.subheadline).weight(.semibold))
                     .foregroundStyle(product.isActive ? .primary : .secondary)
                 Text([product.articleNumber, product.tier.label, product.role.label].filter { !$0.isEmpty }.joined(separator: " · "))
-                    .font(.caption)
+                    .font(.brand(.caption))
                     .foregroundStyle(.secondary)
                 if !product.isActive {
-                    Text("Inaktiv – wird nicht kalkuliert").font(.caption).foregroundStyle(.orange)
+                    Text("Inaktiv – wird nicht kalkuliert").font(.brand(.caption)).foregroundStyle(Theme.sonneText)
                 }
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 3) {
                 Text("VK \(Format.chf(product.sellPrice))")
-                    .font(.subheadline.monospacedDigit().weight(.semibold))
+                    .font(.brand(.subheadline).monospacedDigit().weight(.semibold))
                 Text("EK \(Format.chf(product.purchasePrice)) · \(Format.percent(product.marginPercent))")
-                    .font(.caption.monospacedDigit())
+                    .font(.brand(.caption).monospacedDigit())
                     .foregroundStyle(.secondary)
                 Text("pro \(product.unit.label)")
-                    .font(.caption2)
+                    .font(.brand(.caption2))
                     .foregroundStyle(.tertiary)
             }
         }
@@ -248,7 +248,7 @@ struct MarginSheet: View {
                     }
                     .frame(minHeight: 44)
                     Text("Verkaufspreis = Einkaufspreis ÷ (1 − Marge). Betrifft \(productCount) Produkte dieser Preisliste.")
-                        .font(.footnote)
+                        .font(.brand(.footnote))
                         .foregroundStyle(.secondary)
                 }
             }

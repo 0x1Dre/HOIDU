@@ -43,6 +43,17 @@ public struct CompanyProfile: Codable, Hashable, Sendable {
         return [name, street, cityLine, contact, website, vatNumber.isEmpty ? "" : "MWST-Nr. \(vatNumber)"]
             .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
     }
+
+    /// Kontaktdaten in einer Zeile für die Fusszeile der Offerte.
+    public var footerLine: String {
+        let address = [street, [postalCode, city].filter { !$0.isEmpty }.joined(separator: " ")]
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+        return [name, address, phone, email, website]
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
 }
 
 public struct MaintenancePackageConfig: Codable, Hashable, Sendable, Identifiable {

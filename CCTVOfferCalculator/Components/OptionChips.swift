@@ -64,11 +64,11 @@ struct OptionChips<Option: LabeledOption>: View {
                             .accessibilityHidden(true)
                         Text(option.label)
                     }
-                    .font(.subheadline.weight(.medium))
+                    .font(.brand(.subheadline).weight(.medium))
                     .padding(.horizontal, 14)
                     .frame(minHeight: 44)
                     .background(
-                        Capsule().fill(isSelected ? Theme.navySolid : Theme.subtle)
+                        RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(isSelected ? Theme.gruenSolid : Theme.subtle)
                     )
                     .foregroundStyle(isSelected ? Color.white : Color.primary)
                 }
@@ -91,7 +91,7 @@ struct OptionPicker<Option: LabeledOption>: View {
         if segmented {
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(.secondary)
                 Picker(title, selection: $selection) {
                     ForEach(Array(Option.allCases)) { option in

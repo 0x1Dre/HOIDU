@@ -25,7 +25,7 @@ struct PhotoMarkupView: View {
             Text(tool == .pfeil
                  ? "Vom Montagepunkt in Blickrichtung ziehen."
                  : "Im Montagepunkt beginnen und für die Grösse nach aussen ziehen.")
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(.secondary)
 
             GeometryReader { geometry in
@@ -53,7 +53,7 @@ struct PhotoMarkupView: View {
                 )
                 .accessibilityLabel("Foto zum Markieren. Mit dem Finger ziehen, um eine Markierung zu setzen.")
             }
-            .background(Color.black.opacity(0.9), in: RoundedRectangle(cornerRadius: 12))
+            .background(Color.black.opacity(0.9), in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
 
             HStack(spacing: 12) {
                 Button {

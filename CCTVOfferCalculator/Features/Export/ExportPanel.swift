@@ -25,7 +25,7 @@ struct ExportPanel: View {
                 Toggle("Fotos im Kunden-PDF anzeigen", isOn: $bindableSettings.includePhotosInCustomerPDF)
                     .frame(minHeight: 44)
                 Text("Einzelne Fotos lassen sich beim Foto über «Im Kunden-PDF anzeigen» ausschliessen. Das interne PDF enthält immer alle Fotos.")
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(.secondary)
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 12) { pdfButtons }
@@ -33,7 +33,7 @@ struct ExportPanel: View {
                 }
                 if !analysis.isCalculable {
                     Label("Ohne berechnete Varianten enthält das PDF nur Ausgangslage und Hinweise.", systemImage: "info.circle")
-                        .font(.footnote)
+                        .font(.brand(.footnote))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -48,7 +48,7 @@ struct ExportPanel: View {
                     VStack(spacing: 12) { dataButtons }
                 }
                 Text("CSV: Semikolon-getrennt, UTF-8, für Excel und Buchhaltung. JSON: vollständiges Projekt zum Import auf einem anderen Gerät.")
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(.secondary)
             }
             .card()
@@ -63,7 +63,7 @@ struct ExportPanel: View {
                         Divider()
                     }
                     Text("Eine neue Offertnummer wird vergeben, sobald das Projekt nach der letzten Offerte geändert wurde.")
-                        .font(.footnote)
+                        .font(.brand(.footnote))
                         .foregroundStyle(.secondary)
                 }
                 .card()
@@ -73,7 +73,7 @@ struct ExportPanel: View {
             if isWorking {
                 ProgressView("Export wird erstellt …")
                     .padding()
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
             }
         }
         .sheet(item: $exported) { file in
@@ -192,9 +192,9 @@ struct OfferHistoryRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(offer.number).font(.headline.monospacedDigit())
+                Text(offer.number).font(.brand(.headline).monospacedDigit())
                 Text("\(Format.date(offer.createdAt)) · gültig bis \(Format.date(offer.validUntil)) · \(offer.recommendedTier.label)")
-                    .font(.caption)
+                    .font(.brand(.caption))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -209,10 +209,10 @@ struct OfferHistoryRow: View {
                 }
             } label: {
                 Text(offer.status.label)
-                    .font(.caption.weight(.semibold))
+                    .font(.brand(.caption).weight(.semibold))
                     .padding(.horizontal, 10)
                     .frame(minHeight: 32)
-                    .background(Theme.subtle, in: Capsule())
+                    .background(Theme.subtle, in: RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
             }
         }
         .frame(minHeight: 44)
@@ -233,9 +233,9 @@ struct ExportPreviewSheet: View {
                     VStack(spacing: 16) {
                         Image(systemName: file.kind.symbol)
                             .font(.system(size: 56))
-                            .foregroundStyle(Theme.navy)
+                            .foregroundStyle(Theme.gruen)
                         Text(file.url.lastPathComponent)
-                            .font(.headline)
+                            .font(.brand(.headline))
                             .multilineTextAlignment(.center)
                         Text(file.detail)
                             .foregroundStyle(.secondary)
@@ -263,7 +263,7 @@ struct ExportPreviewSheet: View {
             .safeAreaInset(edge: .bottom) {
                 if file.kind == .pdf {
                     Text(file.detail)
-                        .font(.footnote)
+                        .font(.brand(.footnote))
                         .foregroundStyle(.secondary)
                         .padding(8)
                         .frame(maxWidth: .infinity)

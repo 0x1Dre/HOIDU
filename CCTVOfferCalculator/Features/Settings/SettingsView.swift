@@ -54,8 +54,8 @@ struct SettingsView: View {
                 DecimalField(title: "MWST-Satz", value: $bindableStore.settings.calculation.vatPercent, suffix: "%", fractionDigits: 1)
                 if store.settings.calculation.vatPercent != CalculationSettings.swissVATPercent {
                     Text("Abweichend vom Schweizer Normalsatz \(Format.percent(CalculationSettings.swissVATPercent)).")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
+                        .font(.brand(.footnote))
+                        .foregroundStyle(Theme.sonneText)
                 }
                 Stepper(value: $bindableStore.settings.calculation.offerValidityDays, in: 7...180) {
                     LabeledContent("Gültigkeit der Offerte", value: "\(store.settings.calculation.offerValidityDays) Tage")
@@ -126,7 +126,7 @@ struct SettingsView: View {
             } header: {
                 Text("Datensicherung")
             } footer: {
-                Text("Das Backup enthält alle Projekte inklusive Fotos, alle Preislisten und Einstellungen als JSON-Datei. Es wird zusätzlich in «Dateien › Auf meinem iPad › CCTV Offerte › Backups» abgelegt.")
+                Text("Das Backup enthält alle Projekte inklusive Fotos, alle Preislisten und Einstellungen als JSON-Datei. Es wird zusätzlich in «Dateien › Auf meinem iPad › Ostsicht › Backups» abgelegt.")
             }
 
             Section("Datenschutz und Offline-Betrieb") {
@@ -135,13 +135,13 @@ struct SettingsView: View {
                 Label("Daten verlassen das Gerät nur über «Teilen» oder «Exportieren».", systemImage: "square.and.arrow.up")
                 Label("Kamerazugriff nur für Fotos der Montagepositionen.", systemImage: "camera")
             }
-            .font(.subheadline)
+            .font(.brand(.subheadline))
 
             Section("Über") {
                 LabeledContent("Version", value: AppInfo.version)
                 LabeledContent("MWST Schweiz", value: Format.percent(CalculationSettings.swissVATPercent))
                 Text("Beispielpreise und Herstellerprofile sind Richtwerte ohne Gewähr.")
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(.secondary)
             }
         }
@@ -165,7 +165,7 @@ struct SettingsView: View {
     private func createBackup() {
         do {
             let data = try repository.backup(settings: store.settings, appVersion: AppInfo.version)
-            let url = try ExportService.write(data, fileName: "CCTV-Offerte-Backup-\(ExportService.timestamp()).json", permanent: true)
+            let url = try ExportService.write(data, fileName: "Ostsicht-Backup-\(ExportService.timestamp()).json", permanent: true)
             backupFile = ExportedFile(url: url, kind: .json, title: "Backup", detail: "Alle Projekte, Preislisten und Einstellungen · \(ExportService.byteCount(of: url))")
         } catch {
             alert = AlertMessage(title: "Backup fehlgeschlagen", text: error.localizedDescription)

@@ -42,7 +42,7 @@ struct MaintenanceCalculatorView: View {
                     LabeledContent("Fernsupport inklusive", value: quote.includedRemoteMinutes > 0 ? "\(quote.includedRemoteMinutes) Min./Monat" : "nach Aufwand")
                     DisclosureGroup("Leistungen") {
                         ForEach(quote.services, id: \.self) { service in
-                            Label(service, systemImage: "checkmark").font(.subheadline)
+                            Label(service, systemImage: "checkmark").font(.brand(.subheadline))
                         }
                     }
                 }
@@ -50,7 +50,7 @@ struct MaintenanceCalculatorView: View {
 
             Section {
                 Text("Preise exkl. MWST. Die Ansätze lassen sich unter Einstellungen › Wartungspakete anpassen.")
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(.secondary)
             }
         }

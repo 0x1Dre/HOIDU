@@ -43,7 +43,7 @@ struct RecordingStepView: View {
                 }
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Aufbewahrung in Tagen")
-                        .font(.subheadline)
+                        .font(.brand(.subheadline))
                         .foregroundStyle(.secondary)
                     Picker("Aufbewahrung", selection: retentionSelection) {
                         ForEach(RecordingRecord.retentionPresets, id: \.self) { days in

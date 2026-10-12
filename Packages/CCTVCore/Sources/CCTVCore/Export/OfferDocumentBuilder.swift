@@ -58,7 +58,7 @@ public enum OfferDocumentBuilder {
             recipient: recipient,
             meta: meta,
             sections: sections,
-            footer: [company.name, "Offerte \(options.offerNumber)", "Erstellt mit CCTV Offer Calculator CH \(options.appVersion)"]
+            footer: [company.footerLine, "Offerte \(options.offerNumber)", isInternal ? "App \(options.appVersion)" : ""]
                 .filter { !$0.isEmpty }
                 .joined(separator: " · ")
         )

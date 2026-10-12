@@ -29,7 +29,7 @@ enum ExportService {
         FileManager.default.temporaryDirectory.appendingPathComponent("Exporte", isDirectory: true)
     }
 
-    /// Sichtbar in der Dateien-App unter «Auf meinem iPad/iPhone › CCTV Offerte».
+    /// Sichtbar in der Dateien-App unter «Auf meinem iPad/iPhone › Ostsicht».
     static var backupDirectory: URL {
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         return documents.appendingPathComponent("Backups", isDirectory: true)

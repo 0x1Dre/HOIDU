@@ -75,7 +75,7 @@ struct ProjectWizardView: View {
             }
             Spacer()
             Text("Schritt \(viewModel.step.rawValue) von \(WizardStep.allCases.count)")
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(.secondary)
             Spacer()
             if viewModel.isLastStep {
@@ -118,7 +118,7 @@ struct WizardProgressHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             ProgressView(value: viewModel.progress)
-                .tint(Theme.navy)
+                .tint(Theme.gruen)
                 .accessibilityLabel("Fortschritt")
                 .accessibilityValue("Schritt \(viewModel.step.rawValue) von \(WizardStep.allCases.count)")
             ScrollView(.horizontal, showsIndicators: false) {
@@ -131,12 +131,12 @@ struct WizardProgressHeader: View {
                         } label: {
                             HStack(spacing: 6) {
                                 Text("\(step.rawValue)")
-                                    .font(.caption.weight(.bold))
+                                    .font(.brand(.caption).weight(.semibold))
                                     .frame(width: 22, height: 22)
-                                    .background(Circle().fill(isCurrent ? Color.white : Theme.navySolid.opacity(0.15)))
-                                    .foregroundStyle(isCurrent ? Theme.navySolid : Theme.navy)
+                                    .background(Circle().fill(isCurrent ? Color.white : Theme.gruenSolid.opacity(0.15)))
+                                    .foregroundStyle(isCurrent ? Theme.gruenSolid : Theme.gruen)
                                 Text(step.title)
-                                    .font(.subheadline.weight(isCurrent ? .semibold : .regular))
+                                    .font(.brand(.subheadline).weight(isCurrent ? .semibold : .regular))
                                 if hasIssues {
                                     Image(systemName: "exclamationmark.circle.fill")
                                         .foregroundStyle(isCurrent ? .white : .red)
@@ -145,7 +145,7 @@ struct WizardProgressHeader: View {
                             }
                             .padding(.horizontal, 12)
                             .frame(minHeight: 44)
-                            .background(Capsule().fill(isCurrent ? Theme.navySolid : Theme.subtle))
+                            .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(isCurrent ? Theme.gruenSolid : Theme.subtle))
                             .foregroundStyle(isCurrent ? Color.white : Color.primary)
                         }
                         .buttonStyle(.plain)
@@ -179,14 +179,14 @@ struct NewProjectView: View {
             if router.newProjectWizard.wasRestored {
                 HStack {
                     Label("Entwurf wiederhergestellt", systemImage: "arrow.counterclockwise.circle")
-                        .font(.subheadline)
+                        .font(.brand(.subheadline))
                     Spacer()
                     Button("Ausblenden") { router.newProjectWizard.wasRestored = false }
-                        .font(.subheadline)
+                        .font(.brand(.subheadline))
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 8)
-                .background(Color.blue.opacity(0.12))
+                .background(Theme.gruen.opacity(0.12))
             }
         }
         .alert("Speichern fehlgeschlagen", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {

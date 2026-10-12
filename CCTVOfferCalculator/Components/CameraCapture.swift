@@ -23,7 +23,7 @@ enum CameraAccessIssue: String, Identifiable {
         case .unavailable:
             "Auf diesem Gerät steht keine Kamera zur Verfügung (zum Beispiel im Simulator). Bitte ein Foto aus der Mediathek wählen."
         case .denied:
-            "Die App darf die Kamera nicht verwenden. Erlauben Sie den Zugriff unter Einstellungen › CCTV Offerte › Kamera. Fotos aus der Mediathek können weiterhin gewählt werden."
+            "Die App darf die Kamera nicht verwenden. Erlauben Sie den Zugriff unter Einstellungen › Ostsicht › Kamera. Fotos aus der Mediathek können weiterhin gewählt werden."
         case .restricted:
             "Der Kamerazugriff ist durch eine Geräteeinschränkung (z. B. Bildschirmzeit oder MDM) gesperrt. Bitte ein Foto aus der Mediathek wählen."
         }

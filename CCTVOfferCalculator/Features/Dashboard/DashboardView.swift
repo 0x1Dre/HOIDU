@@ -20,15 +20,17 @@ struct DashboardView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                BrandHeader()
+
                 if !settings.company.isComplete {
                     companyHint
                 }
 
                 LazyVGrid(columns: tileColumns, spacing: 16) {
-                    StatTile(title: "Projekte total", value: "\(projects.count)", systemImage: "folder")
-                    StatTile(title: "Offen", value: "\(openProjects.count)", systemImage: "clock", tint: .orange)
+                    StatTile(title: "Projekte total", value: "\(projects.count)", systemImage: "folder", tint: Theme.anthrazit)
+                    StatTile(title: "Offen", value: "\(openProjects.count)", systemImage: "clock", tint: Theme.sonneText)
                     StatTile(title: "Offeriert (inkl. MWST)", value: Format.chf(offeredVolume), systemImage: "doc.text", tint: Theme.success)
-                    StatTile(title: "Produkte in Preislisten", value: "\(productCount)", systemImage: "list.bullet.rectangle", tint: .purple)
+                    StatTile(title: "Produkte in Preislisten", value: "\(productCount)", systemImage: "list.bullet.rectangle", tint: Theme.grau)
                 }
 
                 SectionHeader(title: "Schnellstart", systemImage: "bolt")
@@ -82,14 +84,14 @@ struct DashboardView: View {
 
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: "lock.shield.fill")
-                        .font(.title2)
-                        .foregroundStyle(Theme.navy)
+                        .font(.brand(.title2))
+                        .foregroundStyle(Theme.gruen)
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Vollständig offline")
-                            .font(.headline)
+                            .font(.brand(.headline))
                         Text("Projekte, Fotos und Preislisten werden ausschliesslich lokal auf diesem Gerät gespeichert. Daten verlassen das Gerät nur, wenn Sie eine Datei aktiv teilen oder exportieren.")
-                            .font(.subheadline)
+                            .font(.brand(.subheadline))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -106,14 +108,14 @@ struct DashboardView: View {
     private var companyHint: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "building.2.crop.circle")
-                .font(.title2)
-                .foregroundStyle(.orange)
+                .font(.brand(.title2))
+                .foregroundStyle(Theme.sonneText)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 6) {
                 Text("Firmenangaben fehlen")
-                    .font(.headline)
+                    .font(.brand(.headline))
                 Text("Erfassen Sie Firmenname, Adresse und MWST-Nummer. Sie erscheinen im Kopf jeder Offerte.")
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(.secondary)
                 Button("Zu den Einstellungen") { router.section = .settings }
                     .buttonStyle(.secondaryAction)
@@ -132,20 +134,20 @@ struct QuickAction: View {
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: systemImage)
-                .font(.title2)
+                .font(.brand(.title2))
                 .frame(width: 44, height: 44)
-                .background(prominent ? Color.white.opacity(0.18) : Theme.subtle, in: RoundedRectangle(cornerRadius: 10))
+                .background(prominent ? Color.white.opacity(0.18) : Theme.subtle, in: RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.headline)
-                Text(subtitle).font(.caption).opacity(0.8)
+                Text(title).font(.brand(.headline))
+                Text(subtitle).font(.brand(.caption)).opacity(0.8)
             }
             Spacer(minLength: 0)
         }
         .foregroundStyle(prominent ? Color.white : Color.primary)
         .padding(16)
         .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
-        .background(prominent ? Theme.navySolid : Theme.card, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .background(prominent ? Theme.gruenSolid : Theme.card, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
@@ -159,20 +161,20 @@ struct RecentProjectCard: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: project.objectType.systemImage)
-                    .foregroundStyle(Theme.navy)
+                    .foregroundStyle(Theme.gruen)
                     .accessibilityHidden(true)
                 StatusBadge(status: project.status)
                 Spacer()
                 if project.isDemo {
-                    Text("Demo").font(.caption2.weight(.bold)).foregroundStyle(.purple)
+                    Text("Demo").font(.brand(.caption2).weight(.semibold)).foregroundStyle(Theme.grau)
                 }
             }
             Text(project.displayTitle)
-                .font(.headline)
+                .font(.brand(.headline))
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
             Text(project.customerName)
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(.secondary)
             HStack {
                 Label("\(project.totalCameras) Kameras", systemImage: "video")
@@ -181,7 +183,7 @@ struct RecentProjectCard: View {
                     Text(Format.chf(offer.recommendedTotal)).monospacedDigit()
                 }
             }
-            .font(.caption)
+            .font(.brand(.caption))
             .foregroundStyle(.secondary)
         }
         .card()

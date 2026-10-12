@@ -53,23 +53,23 @@ struct PhotoThumbnail: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                 .fill(Theme.subtle)
             if let image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
                     .frame(width: size, height: size)
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
             } else {
                 Image(systemName: photo.imageData == nil ? "photo.badge.exclamationmark" : "photo")
-                    .font(.title2)
+                    .font(.brand(.title2))
                     .foregroundStyle(.secondary)
             }
             if !photo.markers.isEmpty {
                 Image(systemName: "pencil.tip.crop.circle.fill")
                     .foregroundStyle(.white, .red)
-                    .font(.title3)
+                    .font(.brand(.title3))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                     .padding(6)
                     .accessibilityHidden(true)

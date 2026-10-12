@@ -67,7 +67,7 @@ struct AreasStepView: View {
                             } label: {
                                 Label("Duplizieren", systemImage: "plus.square.on.square")
                             }
-                            .tint(.blue)
+                            .tint(Theme.anthrazitSolid)
                         }
                     }
                     .onMove { viewModel.moveAreas(from: $0, to: $1) }
@@ -122,19 +122,19 @@ struct AreaRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: area.location == .aussen ? "sun.max" : "house")
-                .font(.title2)
-                .foregroundStyle(Theme.navy)
+                .font(.brand(.title2))
+                .foregroundStyle(Theme.gruen)
                 .frame(width: 36)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(area.name.isEmpty ? "Ohne Namen" : area.name)
-                    .font(.headline)
+                    .font(.brand(.headline))
                 Text("\(area.location.label) · \(area.detectionTarget.label) · Nachtsicht: \(area.nightVision.label)")
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(.secondary)
                 if !area.purposes.isEmpty {
                     Text(area.purposes.labels)
-                        .font(.footnote)
+                        .font(.brand(.footnote))
                         .foregroundStyle(.secondary)
                 }
                 HStack(spacing: 12) {
@@ -142,7 +142,7 @@ struct AreaRow: View {
                     Label("\(area.positions.count) Positionen", systemImage: "mappin.and.ellipse")
                     Label("\(area.allPhotos.count) Fotos", systemImage: "photo")
                 }
-                .font(.footnote)
+                .font(.brand(.footnote))
                 .foregroundStyle(.secondary)
             }
             Spacer()

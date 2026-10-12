@@ -1,4 +1,4 @@
-# CCTV Offer Calculator CH
+# Ostsicht – CCTV Offer Calculator CH
 
 Native SwiftUI-App für iPad und iPhone zur Bedarfsaufnahme von Videoüberwachungsprojekten in der Schweiz – direkt vor Ort beim Kunden und **vollständig offline**. Die App führt durch die Erfassung, fotografiert die geplanten Kamerapositionen, bewertet fünf Hersteller, berechnet drei Angebotsvarianten inklusive Speicherbedarf und Wartung und erstellt Kunden- und interne PDF-Offerten.
 
@@ -116,7 +116,7 @@ Für mehrere Geräte im Betrieb eignen sich TestFlight oder eine MDM-Verteilung 
 
 Alle Daten liegen ausschliesslich lokal auf dem Gerät. Es gibt drei Wege zur Sicherung:
 
-1. **Vollbackup in der App:** **Einstellungen › Datensicherung › Vollständiges Backup erstellen**. Die JSON-Datei enthält alle Projekte inklusive Fotos, alle Preislisten und Einstellungen. Sie wird in der Dateien-App unter **Auf meinem iPad › CCTV Offerte › Backups** abgelegt und kann zusätzlich per AirDrop, USB-Stick, Mail oder auf einen Mac kopiert werden. Wiederherstellen über **Backup einspielen**: Projekte werden ergänzt (bereits vorhandene übersprungen), Preislisten und Einstellungen ersetzt.
+1. **Vollbackup in der App:** **Einstellungen › Datensicherung › Vollständiges Backup erstellen**. Die JSON-Datei enthält alle Projekte inklusive Fotos, alle Preislisten und Einstellungen. Sie wird in der Dateien-App unter **Auf meinem iPad › Ostsicht › Backups** abgelegt und kann zusätzlich per AirDrop, USB-Stick, Mail oder auf einen Mac kopiert werden. Wiederherstellen über **Backup einspielen**: Projekte werden ergänzt (bereits vorhandene übersprungen), Preislisten und Einstellungen ersetzt.
 2. **Einzelne Projekte:** Im Projekt unter **Export › Projekt (JSON)**. Import über **Projekte › Importieren**; existiert das Projekt bereits, wird eine Kopie angelegt.
 3. **Gerätebackup:** Verschlüsseltes Backup über den Finder (Mac) bzw. iTunes (Windows) sichert die App-Daten mit. Ein iCloud-Gerätebackup sichert die App-Daten ebenfalls – wer das nicht möchte, schaltet die App unter **Einstellungen › [Name] › iCloud › iCloud-Backup** aus.
 
@@ -158,6 +158,18 @@ Der Assistent sichert einen begonnenen Entwurf zudem automatisch lokal, damit vo
 
 Das Vollbackup verwendet `"format": "ch.cctv-offer-calculator.backup"` mit den Feldern `projects`, `priceLists` und `settings`. Dateien neuerer Formatversionen werden mit einer klaren Meldung abgelehnt.
 
+## Gestaltung (Ostsicht CI/CD)
+
+Die App folgt dem Ostsicht-Manual (`Design/Ostsicht/Ostsicht-CI-CD-Manual.pdf`). Die verbindlichen Logodateien liegen als SVG daneben.
+
+| Element | Umsetzung |
+| --- | --- |
+| Farben | `Components/Theme.swift`: `gruen` #1B7A44 (Hauptfarbe, Buttons, Tint), `sonne` #F29A1F (nur Flächen/Akzente), `anthrazit` #22272B, `grau` #5F6368, `kalk` #F4F2EC (Hintergrund hell). Oranger Text nur über `sonneText` (#9C5600 hell, #F5B04D dunkel). Im Dunkelmodus werden Grün und Anthrazit für Text aufgehellt. |
+| Schrift | Barlow Regular, Medium und SemiBold (SIL Open Font License, `Resources/Fonts`). `Font.brand(_:)` skaliert mit Dynamic Type; Titel in SemiBold, kein Bold, kein Kursiv. Navigations- und Tab-Leisten über `BrandFont.applyAppearance()`. |
+| Logo | `Components/OstsichtBrand.swift` zeichnet Signet, horizontales und vertikales Logo (Standard, Negativ, Mono) als Vektor nach den SVG-Vorlagen – in der App (`OstsichtLogo`) und im PDF. |
+| App | Anzeigename «Ostsicht», App-Icon = Signet auf Weiss, Logo in der Seitenleiste, Markenkopf mit Claim «Alles im Blick.» im Dashboard, Ecken 4–8 pt. |
+| PDF | Logo oben links, Titel Anthrazit, Abschnittslinien und Tabellenköpfe Grün, Zebrastreifen Kalk, grüne Horizontlinie im Fuss mit Kontaktdaten aus den Firmenangaben. |
+
 ## Kalkulationsgrundlagen
 
 - **Herstellerbewertung:** Basiswert 50 Punkte, regelbasierte Zu- und Abschläge, begrenzt auf 0–100 (`ManufacturerScoring`). Eufy bevorzugt 1–4 Akku-/WLAN-Kameras im Wohnbereich; Reolink 2–16 Kameras mit PoE und lokaler Speicherung; Dahua KMU mit PoE, NVR, Daueraufnahme und KI-Funktionen; Uniview preisbewusste, skalierbare KMU-Systeme; Axis Cybersecurity, VMS, Mehrstandort, Integration und Premium.
@@ -180,5 +192,5 @@ Die mitgelieferten Preislisten enthalten **Beispielpreise in CHF exkl. MWST** f�
 
 ## Bekannte Einschränkungen
 
-- Das App-Icon ist als leerer Platzhalter angelegt; vor einer Verteilung ein 1024×1024-Icon in `Resources/Assets.xcassets/AppIcon.appiconset` ergänzen.
 - Die Bundle Identifier ist ein Platzhalter und muss für die Signierung angepasst werden.
+- Das Ostsicht-Design wurde ohne Xcode umgesetzt (keine Kompilierung in der Entwicklungsumgebung). Falls beim Build Fehler auftreten, bitte zurückmelden.

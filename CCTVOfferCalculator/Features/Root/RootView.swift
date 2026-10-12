@@ -31,15 +31,22 @@ struct RootView: View {
                         ForEach(AppSection.allCases) { section in
                             NavigationLink(value: section) {
                                 Label(section.title, systemImage: section.systemImage)
-                                    .font(.headline)
+                                    .font(.brand(.headline))
                                     .padding(.vertical, 6)
                             }
                         }
                     }
-                    .navigationTitle("CCTV Offerte")
+                    .navigationTitle("Ostsicht")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            OstsichtLogo(layout: .horizontal)
+                                .frame(height: 32)
+                        }
+                    }
                     .safeAreaInset(edge: .bottom) {
                         Label("Offline – Daten bleiben auf dem Gerät", systemImage: "lock.shield")
-                            .font(.footnote)
+                            .font(.brand(.footnote))
                             .foregroundStyle(.secondary)
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)

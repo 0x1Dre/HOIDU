@@ -130,7 +130,7 @@ struct StorageResultSection: View {
         Section("Annahmen") {
             ForEach(result.assumptions, id: \.self) { assumption in
                 Label(assumption, systemImage: "info.circle")
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
             }
         }
     }
@@ -153,7 +153,7 @@ struct StorageSummaryView: View {
                     .foregroundStyle(.secondary)
                 ForEach(result.assumptions, id: \.self) { assumption in
                     Label(assumption, systemImage: "info.circle")
-                        .font(.footnote)
+                        .font(.brand(.footnote))
                         .foregroundStyle(.secondary)
                 }
             } else {
