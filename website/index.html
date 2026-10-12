@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ostsicht – Videoüberwachung Ostschweiz</title>
+  <meta name="description" content="Videoüberwachung für KMU, Gewerbe und Landwirtschaft in der Ostschweiz: Beratung vor Ort mit 3D-Planung, saubere Installation und Wartung aus einer Hand.">
+  <meta name="theme-color" content="#1B7A44">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/barlow-600.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="assets/fonts/barlow-400.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <meta property="og:title" content="Ostsicht – Alles im Blick.">
+  <meta property="og:description" content="Videoüberwachung für KMU, Gewerbe und Landwirtschaft in der Ostschweiz.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="de_CH">
+</head>
+<body>
+  <a class="skip" href="#inhalt">Zum Inhalt springen</a>
+
+  <header class="kopf" id="kopf">
+    <div class="wrap kopf__inner">
+      <a class="kopf__logo" href="#" aria-label="Ostsicht – zur Startseite">
+        <svg viewBox="0 0 400 80" role="img" aria-hidden="true">
+          <g transform="translate(0,4)">
+            <path d="M60 8 L60 1 M36 18 L31 12 M84 18 L89 12 M23 34 L16 31 M97 34 L104 31" stroke="#1B7A44" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M32 50 A28 28 0 0 1 88 50 Z" fill="#F29A1F"/>
+            <circle cx="60" cy="38" r="9" fill="#22272B"/><circle cx="60" cy="38" r="3.5" fill="#FFFFFF"/>
+            <rect x="22" y="50" width="76" height="7" rx="2" fill="#22272B"/>
+            <line x1="8" y1="66" x2="112" y2="66" stroke="#1B7A44" stroke-width="3"/>
+          </g>
+          <text x="132" y="52" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" font-size="46" font-weight="600" fill="#22272B" letter-spacing="0.5" textLength="200" lengthAdjust="spacingAndGlyphs">Ost<tspan fill="#1B7A44">sicht</tspan></text>
+          <text x="134" y="72" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="500" fill="#5F6368" letter-spacing="2" textLength="255" lengthAdjust="spacingAndGlyphs">VIDEOÜBERWACHUNG OSTSCHWEIZ</text>
+        </svg>
+      </a>
+      <nav class="kopf__nav" aria-label="Hauptnavigation">
+        <a href="#leistungen">Leistungen</a>
+        <a href="#planung">Planung</a>
+        <a href="#ablauf">Ablauf</a>
+        <a class="btn btn--gruen" href="#kontakt">Beratung anfragen</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="inhalt">
+
+    <!-- Einstieg: Grundriss eines Hofs mit geplanten Kameras -->
+    <section class="einstieg" aria-labelledby="titel">
+      <div class="wrap einstieg__grid">
+        <div class="einstieg__text">
+          <h1 id="titel">Alles im Blick.</h1>
+          <p class="einstieg__lead">Videoüberwachung für KMU, Gewerbe und Landwirtschaft in der Ostschweiz. Wir beraten vor Ort, installieren sauber und sind auch in drei Jahren noch für Sie da.</p>
+          <div class="einstieg__aktionen">
+            <a class="btn btn--gruen" href="#kontakt">Beratung anfragen</a>
+            <a class="btn btn--rahmen" href="#planung">So planen wir</a>
+          </div>
+        </div>
+
+        <figure class="einstieg__plan">
+          <svg viewBox="0 0 640 500" role="img" aria-labelledby="plan-titel plan-text">
+            <title id="plan-titel">Beispiel-Grundriss eines Hofs</title>
+            <desc id="plan-text">Wohnhaus, Stall und Maschinenhalle mit vier geplanten Kameras. Orange Flächen zeigen, was jede Kamera sieht.</desc>
+            <defs>
+              <pattern id="raster" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M20 0 H0 V20" fill="none" stroke="#E7E4DA" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect x="0" y="0" width="640" height="500" rx="8" fill="#FFFFFF"/>
+            <rect x="0" y="0" width="640" height="500" rx="8" fill="url(#raster)"/>
+            <!-- Zufahrt -->
+            <path d="M0 392 L262 352 L276 420 L0 470 Z" fill="#E6E2D7"/>
+            <path d="M0 431 L268 386" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="10 10"/>
+
+            <!-- Blickfelder aussen (unter den Gebäuden, damit Wände die Sicht begrenzen) -->
+            <g fill="#F29A1F" fill-opacity=".26" stroke="#F29A1F" stroke-opacity=".85" stroke-width="1.5">
+              <path class="blickfeld" style="--o: 300px 214px; --i: 0" d="M300 214 L308.3 403.8 A190 190 0 0 1 110.2 205.7 Z"/>
+              <path class="blickfeld" style="--o: 322px 286px; --i: 1" d="M322 286 L153.0 331.3 A175 175 0 0 1 276.7 117.0 Z"/>
+              <path class="blickfeld" style="--o: 236px 214px; --i: 2" d="M236 214 L385.9 220.5 A150 150 0 0 1 242.5 363.9 Z"/>
+            </g>
+
+            <!-- Gebäude -->
+            <g fill="#F4F2EC" stroke="#22272B" stroke-width="6" stroke-linejoin="miter">
+              <rect x="40" y="60" width="190" height="150"/>
+              <rect x="300" y="40" width="300" height="170"/>
+              <rect x="330" y="290" width="270" height="170"/>
+            </g>
+            <!-- Tore -->
+            <g stroke="#FFFFFF" stroke-width="8">
+              <line x1="400" y1="210" x2="470" y2="210"/>
+              <line x1="330" y1="330" x2="330" y2="420"/>
+              <line x1="230" y1="120" x2="230" y2="160"/>
+            </g>
+
+            <!-- Blickfeld im Stall: endet an der Wand -->
+            <g fill="#F29A1F" fill-opacity=".26" stroke="#F29A1F" stroke-opacity=".85" stroke-width="1.5">
+              <path class="blickfeld" style="--o: 452px 56px; --i: 3" d="M452 56 L566.9 152.4 A150 150 0 0 1 337.1 152.4 Z"/>
+            </g>
+
+            <!-- Beschriftung -->
+            <g font-family="Barlow, Arial, sans-serif" font-size="16" font-weight="500" fill="#5F6368">
+              <text x="135" y="140" text-anchor="middle">Wohnhaus</text>
+              <text x="588" y="198" text-anchor="end">Stall</text>
+              <text x="465" y="380" text-anchor="middle">Maschinenhalle</text>
+              <text x="70" y="452">Zufahrt</text>
+            </g>
+
+            <!-- Kameras -->
+            <g font-family="Barlow, Arial, sans-serif" font-size="12" font-weight="600" fill="#FFFFFF" text-anchor="middle">
+              <circle cx="300" cy="214" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="300" y="218.5">1</text>
+              <circle cx="322" cy="286" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="322" y="290.5">2</text>
+              <circle cx="236" cy="214" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="236" y="218.5">3</text>
+              <circle cx="452" cy="56" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="452" y="60.5">4</text>
+            </g>
+          </svg>
+          <figcaption class="einstieg__legende">
+            <span><i class="punkt punkt--kamera" aria-hidden="true"></i>Kamera</span>
+            <span><i class="punkt punkt--blick" aria-hidden="true"></i>Blickfeld</span>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="horizont" aria-hidden="true"></div>
+    </section>
+
+    <!-- Für wen -->
+    <section class="abschnitt" aria-labelledby="zielgruppen-titel">
+      <div class="wrap">
+        <div class="abschnitt__kopf">
+          <h2 id="zielgruppen-titel">Für Betriebe in der Region</h2>
+          <p>Wir planen Kameras dort, wo sie Ihnen wirklich etwas nützen – nicht möglichst viele, sondern die richtigen.</p>
+        </div>
+        <div class="zielgruppen">
+          <article class="zielgruppe">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 42V20l10 6v-6l10 6v-6l10 6V8h6v34z"/><path d="M14 34h4M24 34h4"/>
+            </svg>
+            <h3>KMU und Gewerbe</h3>
+            <p>Werkstatt, Lager, Laden oder Büro. Sie sehen auf dem Handy, wer nach Feierabend aufs Gelände fährt.</p>
+          </article>
+          <article class="zielgruppe">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 42V20L24 8l18 12v22z"/><path d="M17 42V28h14v14M17 28l14 14M31 28L17 42"/>
+            </svg>
+            <h3>Landwirtschaft</h3>
+            <p>Hofeinfahrt, Stall und Maschinenhalle. Die Kamera am Stalltor zeigt Ihnen auch nachts ein klares Bild.</p>
+          </article>
+          <article class="zielgruppe">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M8 42V8h20v34M28 18h12v24M4 42h40"/><path d="M14 15h2M20 15h2M14 22h2M20 22h2M14 29h2M20 29h2M34 25h2M34 32h2"/>
+            </svg>
+            <h3>Liegenschaften</h3>
+            <p>Eingänge, Tiefgaragen und Veloräume für Verwaltungen – mit klaren Regeln, wer was sehen darf.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Leistungen -->
+    <section class="abschnitt abschnitt--kalk" id="leistungen" aria-labelledby="leistungen-titel">
+      <div class="wrap">
+        <div class="abschnitt__kopf">
+          <h2 id="leistungen-titel">Beratung, Installation und Wartung aus einer Hand</h2>
+          <p>Ein Ansprechpartner von der ersten Begehung bis zum Service-Termin. Kurze Wege, direkter Kontakt.</p>
+        </div>
+        <div class="leistungen">
+          <article class="leistung">
+            <h3>Beratung vor Ort</h3>
+            <p>Wir schauen uns Ihren Betrieb an und schlagen vor, was wirklich nötig ist.</p>
+            <ul>
+              <li>Begehung mit Fotos und 3D-Scan</li>
+              <li>Offerte mit drei Varianten</li>
+              <li>Beratung zum Datenschutz</li>
+            </ul>
+          </article>
+          <article class="leistung">
+            <h3>Installation</h3>
+            <p>Saubere Montage, ordentlich verlegte Kabel, eingerichtet und getestet.</p>
+            <ul>
+              <li>Mit Kabel (PoE) oder kabellos</li>
+              <li>App und Rekorder eingerichtet</li>
+              <li>Einweisung vor Ort</li>
+            </ul>
+          </article>
+          <article class="leistung">
+            <h3>Wartung</h3>
+            <p>Einmal pro Jahr geprüft, damit im Ernstfall alles läuft.</p>
+            <ul>
+              <li>Updates und Fernwartung</li>
+              <li>Jährlicher Check vor Ort</li>
+              <li>Feste Reaktionszeiten</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Planung mit dem eigenen Werkzeug -->
+    <section class="planung" id="planung" aria-labelledby="planung-titel">
+      <div class="wrap">
+        <div class="abschnitt__kopf">
+          <div>
+            <svg width="64" height="22" viewBox="0 0 120 40" aria-hidden="true" style="margin-bottom:18px">
+              <path d="M60 30 L60 4 M36 34 L24 14 M84 34 L96 14 M14 38 L2 30 M106 38 L118 30" stroke="#F29A1F" stroke-width="5" stroke-linecap="round" fill="none"/>
+            </svg>
+            <h2 id="planung-titel">Ihre Wünsche, vor Ort geplant</h2>
+          </div>
+          <p>Mit unserem eigenen Planungswerkzeug auf dem iPad erfassen wir Ihre Anforderungen direkt bei Ihnen. Sie sehen noch während der Begehung, was möglich ist und was es kostet.</p>
+        </div>
+
+        <ol class="schritte">
+          <li class="schritt">
+            <div class="schritt__text">
+              <span class="schritt__nr" aria-hidden="true">1</span>
+              <h3>Wünsche erfassen</h3>
+              <p>Gemeinsam gehen wir Bereich für Bereich durch: Was soll man sehen, wann wird aufgezeichnet, wer schaut zu? Jede geplante Montagestelle halten wir mit einem Foto fest.</p>
+            </div>
+            <div class="app" role="img" aria-label="Beispiel: Erfassung der Bereiche und Anforderungen für einen Hof">
+              <div class="app__titel"><strong>Hof Beispiel</strong><span>Schritt 2 von 5</span></div>
+              <div class="chips">
+                <span class="chip chip--an">Zufahrt</span>
+                <span class="chip chip--an">Stall</span>
+                <span class="chip chip--an">Maschinenhalle</span>
+                <span class="chip">Wohnhaus</span>
+              </div>
+              <div class="feld"><span>Erkennen</span><span>Personen und Fahrzeuge</span></div>
+              <div class="feld"><span>Nachtsicht</span><span>Farbbild</span></div>
+              <div class="feld"><span>Aufzeichnung</span><span>Bei Bewegung, 14 Tage</span></div>
+              <div class="feld"><span>Zugriff</span><span>Smartphone</span></div>
+              <div class="fotos" aria-hidden="true"><span class="foto"></span><span class="foto"></span><span class="foto"></span></div>
+            </div>
+          </li>
+
+          <li class="schritt">
+            <div class="schritt__text">
+              <span class="schritt__nr" aria-hidden="true">2</span>
+              <h3>Raum und Hof in 3D scannen</h3>
+              <p>Mit dem LiDAR-Sensor des iPads entsteht in wenigen Minuten ein 3D-Modell. Darin setzen wir die Kameras und sehen sofort, was sie erfassen – und wo eine Wand die Sicht verdeckt.</p>
+              <p>Der Grundriss mit allen Kamerastandorten kommt direkt in Ihre Offerte.</p>
+            </div>
+            <div class="app app--modell" role="img" aria-label="Beispiel: 3D-Modell eines Raums mit platzierter Kamera und ihrem Blickfeld">
+              <div class="app__titel"><strong>Werkstatt</strong><span>3D · Grundriss · Fotos</span></div>
+              <svg viewBox="0 0 360 230" aria-hidden="true">
+                <!-- Boden -->
+                <path d="M30 160 L180 220 L330 160 L180 100 Z" fill="#ECE8DD" stroke="#C9C4B6"/>
+                <!-- Wände -->
+                <path d="M30 160 L30 60 L180 0 L180 100 Z" fill="#F7F5F0" stroke="#22272B" stroke-width="2"/>
+                <path d="M180 100 L180 0 L330 60 L330 160 Z" fill="#FBFAF7" stroke="#22272B" stroke-width="2"/>
+                <!-- Tor und Fenster -->
+                <path d="M228 120 L228 62 L282 84 L282 142 Z" fill="#DDE6DF" stroke="#1B7A44" stroke-width="2"/>
+                <path d="M72 102 L72 76 L120 57 L120 83 Z" fill="#D7E3EA" stroke="#5F6368"/>
+                <!-- Werkbank -->
+                <path d="M200 175 L250 155 L290 171 L240 191 Z" fill="#CFCBBF" stroke="#9E998B"/>
+                <!-- Blickfeld: endet an Boden und Wand -->
+                <path d="M62 82 L300 150 L196 214 L82 172 Z" fill="#F29A1F" fill-opacity=".28" stroke="#F29A1F" stroke-width="1.5"/>
+                <path d="M196 214 L300 150 L240 191 Z" fill="#F29A1F" fill-opacity=".45"/>
+                <!-- Kamera -->
+                <circle cx="62" cy="82" r="9" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/>
+                <!-- Foto-Aufnahme -->
+                <rect x="276" y="186" width="38" height="28" rx="2" fill="#FFFFFF" stroke="#5F6368"/>
+                <rect x="279" y="189" width="32" height="22" fill="#B8C7BB"/>
+              </svg>
+            </div>
+          </li>
+
+          <li class="schritt">
+            <div class="schritt__text">
+              <span class="schritt__nr" aria-hidden="true">3</span>
+              <h3>Ehrlich abgleichen</h3>
+              <p>Für jeden Wunsch zeigt das Werkzeug, welcher Hersteller ihn erfüllt – und erklärt, warum etwas nicht geht und welche Alternative es gibt.</p>
+              <p>Wenn eine einfache Lösung reicht, sagen wir das.</p>
+            </div>
+            <div class="app" role="img" aria-label="Beispiel: Abgleich der Anforderungen mit einem Hersteller">
+              <div class="app__titel"><strong>Hersteller B · 82 von 100</strong><span>Sehr gut geeignet</span></div>
+              <ul class="pruefung">
+                <li><span class="status status--ok" aria-hidden="true">✓</span><div><b>6 Kameras</b><small>Mit einem Rekorder gut abgedeckt.</small></div></li>
+                <li><span class="status status--ok" aria-hidden="true">✓</span><div><b>Farbbild bei Nacht</b><small>Farbbild bei wenig Licht, Scheinwerfer bei Dunkelheit.</small></div></li>
+                <li><span class="status status--teil" aria-hidden="true">!</span><div><b>Zwei Standorte</b><small>In der App zusammenfassbar, ohne zentrale Verwaltung.</small></div></li>
+                <li><span class="status status--nein" aria-hidden="true">✕</span><div><b>Autonummern erkennen</b><small>Nicht im Sortiment. Alternative: eigene Kamera an der Zufahrt.</small></div></li>
+              </ul>
+            </div>
+          </li>
+
+          <li class="schritt">
+            <div class="schritt__text">
+              <span class="schritt__nr" aria-hidden="true">4</span>
+              <h3>Offerte vor Ort</h3>
+              <p>Drei Varianten mit Material, Arbeit, Speicherbedarf und Wartung – nachvollziehbar gerechnet, in Franken inklusive MWST.</p>
+              <p>Sie erhalten die Offerte als PDF mit Grundriss, Kamerastandorten und Fotos.</p>
+            </div>
+            <div class="app" role="img" aria-label="Beispiel: Offerte mit drei Varianten, Speicher und Wartung">
+              <div class="app__titel"><strong>Offerte</strong><span>Beispielwerte</span></div>
+              <div class="varianten">
+                <div class="variante"><small>Budget</small><strong>CHF 3’480</strong></div>
+                <div class="variante variante--empfohlen"><small>Standard</small><strong>CHF 4’950</strong><em>Empfohlen</em></div>
+                <div class="variante"><small>Premium</small><strong>CHF 9’870</strong></div>
+              </div>
+              <div class="feld"><span>Speicher für 14 Tage</span><span class="zahlen">4 TB</span></div>
+              <div class="feld"><span>Arbeit inkl. Anfahrt</span><span class="zahlen">11.5 h</span></div>
+              <div class="feld"><span>Wartung Business</span><span class="zahlen">CHF 59.– / Monat</span></div>
+              <div class="app__fuss" aria-hidden="true"><span>Kunden-PDF</span><span>Grundriss</span></div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Ablauf -->
+    <section class="abschnitt abschnitt--kalk" id="ablauf" aria-labelledby="ablauf-titel">
+      <div class="wrap">
+        <div class="abschnitt__kopf">
+          <h2 id="ablauf-titel">So läuft es ab</h2>
+          <p>Vom ersten Anruf bis zur Wartung – Sie wissen immer, was als Nächstes kommt.</p>
+        </div>
+        <ol class="ablauf">
+          <li><h3>Anfrage</h3><p>Sie schildern kurz, worum es geht.</p></li>
+          <li><h3>Begehung</h3><p>Vor Ort, mit Scan und Fotos. Rund eine Stunde.</p></li>
+          <li><h3>Offerte</h3><p>Drei Varianten, verständlich erklärt.</p></li>
+          <li><h3>Installation</h3><p>Montage, Einrichtung und Einweisung.</p></li>
+          <li><h3>Wartung</h3><p>Updates, Check vor Ort, schnelle Hilfe.</p></li>
+        </ol>
+
+        <div class="hinweis" style="margin-top: clamp(48px, 7vw, 80px)">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M24 4l16 6v12c0 10-7 18-16 22C15 40 8 32 8 22V10z"/><path d="M17 24l5 5 9-10"/>
+          </svg>
+          <div>
+            <h3>Datenschutz gehört dazu</h3>
+            <p>Videoüberwachung ist in der Schweiz durch das Datenschutzgesetz geregelt. Wir beraten Sie zu Hinweisschildern, Aufnahmebereich und Speicherdauer – damit Ihre Anlage nicht nur funktioniert, sondern auch erlaubt ist.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Kontakt -->
+    <section class="abschnitt" id="kontakt" aria-labelledby="kontakt-titel">
+      <div class="wrap kontakt">
+        <div class="kontakt__text">
+          <h2 id="kontakt-titel">Beratung anfragen</h2>
+          <p>Erzählen Sie uns kurz, worum es geht. Wir melden uns in der Regel innert zwei Arbeitstagen und vereinbaren einen Termin vor Ort.</p>
+          <p>Die Begehung ist unverbindlich.</p>
+          <div class="kontakt__daten">
+            <a href="mailto:info@ostsicht.ch">info@ostsicht.ch</a>
+            <span>Ostschweiz</span>
+          </div>
+        </div>
+
+        <form class="formular" id="formular" action="contact.php" method="post" novalidate>
+          <div>
+            <label for="name">Name <span class="pflicht">(nötig)</span></label>
+            <input id="name" name="name" type="text" autocomplete="name" required maxlength="120">
+            <p class="feldfehler" id="name-fehler" hidden></p>
+          </div>
+          <div>
+            <label for="firma">Firma oder Betrieb</label>
+            <input id="firma" name="firma" type="text" autocomplete="organization" maxlength="120">
+          </div>
+          <div>
+            <label for="email">E-Mail <span class="pflicht">(nötig)</span></label>
+            <input id="email" name="email" type="email" autocomplete="email" required maxlength="160">
+            <p class="feldfehler" id="email-fehler" hidden></p>
+          </div>
+          <div>
+            <label for="telefon">Telefon</label>
+            <input id="telefon" name="telefon" type="tel" autocomplete="tel" maxlength="40">
+          </div>
+          <div>
+            <label for="ort">PLZ und Ort</label>
+            <input id="ort" name="ort" type="text" autocomplete="address-level2" maxlength="80">
+          </div>
+          <div>
+            <label for="objekt">Art des Objekts</label>
+            <select id="objekt" name="objekt">
+              <option value="">Bitte wählen</option>
+              <option>Gewerbe oder KMU</option>
+              <option>Landwirtschaft</option>
+              <option>Liegenschaft</option>
+              <option>Privat</option>
+              <option>Anderes</option>
+            </select>
+          </div>
+          <div class="ganz">
+            <label for="nachricht">Worum geht es? <span class="pflicht">(nötig)</span></label>
+            <textarea id="nachricht" name="nachricht" required maxlength="4000" placeholder="Zum Beispiel: Wir möchten Zufahrt und Maschinenhalle überwachen und auf dem Handy sehen, wer nachts aufs Gelände fährt."></textarea>
+            <p class="feldfehler" id="nachricht-fehler" hidden></p>
+          </div>
+
+          <!-- Spamschutz: für Menschen unsichtbar -->
+          <div class="honig" aria-hidden="true">
+            <label for="website">Website</label>
+            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+          </div>
+          <input type="hidden" name="gestartet" id="gestartet" value="">
+
+          <div class="ganz">
+            <label class="einwilligung">
+              <input type="checkbox" name="einwilligung" id="einwilligung" value="ja" required>
+              <span>Ich bin einverstanden, dass Ostsicht meine Angaben zur Bearbeitung der Anfrage verwendet. Mehr dazu in der <a href="datenschutz.html">Datenschutzerklärung</a>.</span>
+            </label>
+            <p class="feldfehler" id="einwilligung-fehler" hidden></p>
+          </div>
+
+          <div class="ganz formular__aktion">
+            <button class="btn btn--gruen" type="submit">Anfrage senden</button>
+            <p class="formular__status" id="formular-status" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="fuss">
+    <div class="wrap">
+      <div class="fuss__grid">
+        <div>
+          <svg class="fuss__logo" viewBox="0 0 400 80" role="img" aria-label="Ostsicht – Videoüberwachung Ostschweiz">
+            <g transform="translate(0,4)">
+              <path d="M60 8 L60 1 M36 18 L31 12 M84 18 L89 12 M23 34 L16 31 M97 34 L104 31" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+              <path d="M32 50 A28 28 0 0 1 88 50 Z" fill="#F29A1F"/>
+              <circle cx="60" cy="38" r="9" fill="#22272B"/><circle cx="60" cy="38" r="3.5" fill="#FFFFFF"/>
+              <rect x="22" y="50" width="76" height="7" rx="2" fill="#FFFFFF"/>
+              <line x1="8" y1="66" x2="112" y2="66" stroke="#FFFFFF" stroke-width="3"/>
+            </g>
+            <text x="132" y="52" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" font-size="46" font-weight="600" fill="#FFFFFF" letter-spacing="0.5" textLength="200" lengthAdjust="spacingAndGlyphs">Ostsicht</text>
+            <text x="134" y="72" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="500" fill="#C9CDD1" letter-spacing="2" textLength="255" lengthAdjust="spacingAndGlyphs">VIDEOÜBERWACHUNG OSTSCHWEIZ</text>
+          </svg>
+          <p>Beratung, Installation und Wartung von Videoüberwachung für die Ostschweiz.</p>
+        </div>
+        <div>
+          <h2>Kontakt</h2>
+          <ul>
+            <li><a href="mailto:info@ostsicht.ch">info@ostsicht.ch</a></li>
+            <li><a href="#kontakt">Beratung anfragen</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Rechtliches</h2>
+          <ul>
+            <li><a href="impressum.html">Impressum</a></li>
+            <li><a href="datenschutz.html">Datenschutz</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="fuss__unten">
+        <span>© <span id="jahr">2026</span> Ostsicht</span>
+        <span>Alles im Blick.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js" defer></script>
+</body>
+</html>
