@@ -5,8 +5,9 @@
  * Nimmt die Anfrage entgegen, prüft sie und sendet sie per E-Mail.
  * Antwortet mit JSON (Versand per JavaScript) oder leitet zurück auf die Seite (ohne JavaScript).
  *
- * Voraussetzung: PHP 7.4+ und ein auf dem Server eingerichteter Mailversand (sendmail/Postfix
- * oder Hosting-Mailer). Siehe README.md.
+ * Versand: Liegt eine Datei «ostsicht-mail.php» mit SMTP-Zugangsdaten EINE EBENE ÜBER dem
+ * Web-Verzeichnis (z. B. neben public_html), wird per SMTP gesendet (empfohlen, z. B. bei Hostinger).
+ * Sonst wird die PHP-Funktion mail() verwendet. Siehe README.md.
  */
 
 declare(strict_types=1);
@@ -135,16 +136,19 @@ $kopf = [
     'X-Mailer: Ostsicht-Kontaktformular',
 ];
 
-$gesendet = mail(
-    EMPFAENGER,
-    '=?UTF-8?B?' . base64_encode($betreff) . '?=',
-    $text,
-    implode("\r\n", $kopf),
-    '-f' . ABSENDER
-);
+$betreffKodiert = '=?UTF-8?B?' . base64_encode($betreff) . '?=';
+$smtp = smtpEinstellungen();
+
+if ($smtp !== null) {
+    // Bei SMTP muss der Absender das angemeldete Postfach sein.
+    $kopf[0] = 'From: Ostsicht Website <' . $smtp['user'] . '>';
+    $gesendet = smtpSenden($smtp, EMPFAENGER, $betreffKodiert, $text, $kopf);
+} else {
+    $gesendet = mail(EMPFAENGER, $betreffKodiert, $text, implode("\r\n", $kopf), '-f' . ABSENDER);
+}
 
 if (!$gesendet) {
-    error_log('Ostsicht Kontaktformular: mail() fehlgeschlagen');
+    error_log('Ostsicht Kontaktformular: Versand fehlgeschlagen (' . ($smtp !== null ? 'SMTP' : 'mail()') . ')');
     antworten(false, 'Die Anfrage konnte gerade nicht gesendet werden. Bitte schreiben Sie uns direkt an ' . EMPFAENGER . '.', 500, $alsJson);
 }
 
@@ -152,3 +156,81 @@ $zeiten[] = $jetzt;
 @file_put_contents($datei, json_encode($zeiten), LOCK_EX);
 
 antworten(true, 'Danke! Ihre Anfrage ist bei uns angekommen.', 200, $alsJson);
+
+// ---------- SMTP ----------
+
+/** Zugangsdaten aus ../ostsicht-mail.php (ausserhalb des Web-Verzeichnisses), sonst null. */
+function smtpEinstellungen(): ?array
+{
+    $datei = dirname(__DIR__) . '/ostsicht-mail.php';
+    if (!is_readable($datei)) return null;
+    $c = include $datei;
+    if (!is_array($c) || empty($c['host']) || empty($c['user']) || !isset($c['pass'])) return null;
+    return [
+        'host'   => (string) $c['host'],
+        'port'   => (int) ($c['port'] ?? 465),
+        'secure' => (string) ($c['secure'] ?? 'ssl'),   // 'ssl' (Port 465) oder 'tls' (Port 587, STARTTLS)
+        'user'   => (string) $c['user'],
+        'pass'   => (string) $c['pass'],
+    ];
+}
+
+/** Minimaler SMTP-Versand mit Anmeldung (AUTH LOGIN), SSL oder STARTTLS. */
+function smtpSenden(array $c, string $an, string $betreff, string $text, array $kopf): bool
+{
+    $kontext = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
+    $adresse = ($c['secure'] === 'ssl' ? 'ssl://' : 'tcp://') . $c['host'] . ':' . $c['port'];
+    $verbindung = @stream_socket_client($adresse, $nr, $meldung, 15, STREAM_CLIENT_CONNECT, $kontext);
+    if (!$verbindung) {
+        error_log("SMTP: Verbindung zu $adresse fehlgeschlagen: $meldung");
+        return false;
+    }
+    stream_set_timeout($verbindung, 15);
+
+    $lesen = function () use ($verbindung): string {
+        $antwort = '';
+        while (($zeile = fgets($verbindung, 515)) !== false) {
+            $antwort .= $zeile;
+            if (strlen($zeile) < 4 || $zeile[3] === ' ') break;   // letzte Zeile einer Antwort
+        }
+        return $antwort;
+    };
+    $befehl = function (string $zeile, array $erwartet) use ($verbindung, $lesen): bool {
+        if ($zeile !== '') fwrite($verbindung, $zeile . "\r\n");
+        $antwort = $lesen();
+        $ok = in_array((int) substr($antwort, 0, 3), $erwartet, true);
+        if (!$ok) error_log('SMTP: unerwartete Antwort auf «' . (stripos($zeile, 'AUTH') === 0 || $zeile === '' ? $zeile : strtok($zeile, ' ')) . '»: ' . trim($antwort));
+        return $ok;
+    };
+
+    $hostname = $_SERVER['SERVER_NAME'] ?? 'localhost';
+    $ok = $befehl('', [220]) && $befehl('EHLO ' . $hostname, [250]);
+    if ($ok && $c['secure'] === 'tls') {
+        $ok = $befehl('STARTTLS', [220])
+            && stream_socket_enable_crypto($verbindung, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT)
+            && $befehl('EHLO ' . $hostname, [250]);
+    }
+    $ok = $ok
+        && $befehl('AUTH LOGIN', [334])
+        && $befehl(base64_encode($c['user']), [334])
+        && $befehl(base64_encode($c['pass']), [235])
+        && $befehl('MAIL FROM:<' . $c['user'] . '>', [250])
+        && $befehl('RCPT TO:<' . $an . '>', [250, 251])
+        && $befehl('DATA', [354]);
+
+    if ($ok) {
+        $nachricht = array_merge([
+            'Date: ' . date('r'),
+            'To: <' . $an . '>',
+            'Subject: ' . $betreff,
+            'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . substr(strrchr($c['user'], '@') ?: '@localhost', 1) . '>',
+        ], $kopf);
+        // Zeilen, die mit einem Punkt beginnen, verdoppeln (SMTP-Regel)
+        $inhalt = preg_replace('/^\./m', '..', str_replace(["\r\n", "\r"], "\n", $text)) ?? $text;
+        $daten = implode("\r\n", $nachricht) . "\r\n\r\n" . str_replace("\n", "\r\n", $inhalt) . "\r\n.";
+        $ok = $befehl($daten, [250]);
+    }
+    fwrite($verbindung, "QUIT\r\n");
+    fclose($verbindung);
+    return $ok;
+}

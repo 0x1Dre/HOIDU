@@ -27,6 +27,26 @@ nginx.conf.example  Gleiches für Nginx
 
 ## Aufschalten
 
+### Hostinger (hPanel)
+1. **Domain verbinden:** Websites → Website hinzufügen → ostsicht.ch. Wurde die Domain nicht bei Hostinger gekauft, beim Registrar die Nameserver auf `ns1.dns-parking.com` / `ns2.dns-parking.com` umstellen (oder die in hPanel angezeigten Werte).
+2. **Postfach anlegen:** E-Mails → Verwalten → Neues Konto erstellen → `info@ostsicht.ch` mit Passwort.
+3. **Dateien hochladen:** Dateien → Dateimanager → `public_html` öffnen → `ostsicht-website.zip` hochladen → Rechtsklick → Entpacken. Danach `ostsicht-website.zip`, `README.md` und `nginx.conf.example` in `public_html` löschen. `.htaccess` muss mit drin sein (versteckte Dateien im Dateimanager einblenden).
+4. **SMTP-Zugang:** Eine Ebene **über** `public_html` (im Home-Verzeichnis, nicht im Web-Ordner) die Datei `ostsicht-mail.php` anlegen:
+   ```php
+   <?php
+   return [
+       'host'   => 'smtp.hostinger.com',
+       'port'   => 465,
+       'secure' => 'ssl',
+       'user'   => 'info@ostsicht.ch',
+       'pass'   => 'PASSWORT-DES-POSTFACHS',
+   ];
+   ```
+   Ohne diese Datei wird `mail()` verwendet – das klappt bei Hostinger oft nur unzuverlässig.
+5. **SSL:** Sicherheit → SSL → Zertifikat für ostsicht.ch installieren, «HTTPS erzwingen» aktivieren.
+6. **Mail-DNS prüfen:** E-Mails → Verwalten → DNS-Einträge: SPF, DKIM und DMARC sollten grün sein.
+7. **Testen:** Formular auf https://ostsicht.ch ausfüllen; die Anfrage muss in `info@ostsicht.ch` ankommen (Webmail).
+
 ### Apache (typisch bei Shared Hosting)
 Inhalt dieses Ordners ins Web-Verzeichnis kopieren (inklusive `.htaccess`). PHP muss aktiv sein.
 
@@ -50,7 +70,7 @@ rsync -av --delete --exclude README.md --exclude nginx.conf.example ./ benutzer@
 php -r "var_dump(mail('info@ostsicht.ch', 'Test', 'Test von der Website', 'From: website@ostsicht.ch'));"
 ```
 
-Gibt das `bool(false)` zurück oder kommt keine Mail an, ist der Mailversand noch nicht eingerichtet. Alternative: Versand über SMTP des Mailanbieters (z. B. mit PHPMailer) – gerne nachrüsten.
+Gibt das `bool(false)` zurück oder kommt keine Mail an, ist der Mailversand noch nicht eingerichtet. Dann SMTP verwenden: Datei `ostsicht-mail.php` wie oben bei Hostinger beschrieben eine Ebene über dem Web-Verzeichnis anlegen (Zugangsdaten des eigenen Mailanbieters; `secure` = `ssl` für Port 465 oder `tls` für Port 587). Fehler landen im PHP-Fehlerprotokoll des Hosters.
 
 Das Formular funktioniert auch ohne JavaScript (normaler Versand mit Rückleitung auf die Seite).
 
