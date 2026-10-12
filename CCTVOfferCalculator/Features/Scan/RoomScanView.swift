@@ -12,21 +12,25 @@ import CCTVCore
 @Observable
 final class RoomScanController {
     enum Phase {
+        case ready
         case scanning
         case processing
         case review(CapturedRoom)
         case failed(String)
     }
 
-    var phase: Phase = .scanning
+    var phase: Phase = .ready
     @ObservationIgnored let captureView: RoomCaptureView
     @ObservationIgnored private let delegateProxy = RoomCaptureDelegateProxy()
+    @ObservationIgnored private var timeoutTask: Task<Void, Never>?
 
     init() {
-        captureView = RoomCaptureView(frame: .zero)
+        // Mit Bildschirmgrösse anlegen; RoomPlan richtet die Darstellung beim Erstellen ein.
+        captureView = RoomCaptureView(frame: ScreenSize.bounds)
         captureView.delegate = delegateProxy
         delegateProxy.onResult = { [weak self] room, error in
             guard let self else { return }
+            self.timeoutTask?.cancel()
             if let error {
                 self.phase = .failed(error)
             } else if let room {
@@ -35,7 +39,13 @@ final class RoomScanController {
         }
     }
 
+    var isScanning: Bool {
+        if case .scanning = phase { return true }
+        return false
+    }
+
     func start() {
+        timeoutTask?.cancel()
         phase = .scanning
         captureView.captureSession.run(configuration: RoomCaptureSession.Configuration())
     }
@@ -43,9 +53,16 @@ final class RoomScanController {
     func finish() {
         phase = .processing
         captureView.captureSession.stop()
+        // RoomPlan meldet sich nicht, wenn zu wenig erfasst wurde. Nach 30 s abbrechen.
+        timeoutTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(30))
+            guard let self, !Task.isCancelled, case .processing = self.phase else { return }
+            self.phase = .failed("Der Raum konnte nicht ausgewertet werden. Bitte erneut scannen und dabei Wände, Ecken und Boden langsam abfahren.")
+        }
     }
 
     func cancel() {
+        timeoutTask?.cancel()
         captureView.captureSession.stop()
     }
 }
@@ -82,8 +99,17 @@ final class RoomCaptureDelegateProxy: NSObject, RoomCaptureViewDelegate {
 private struct RoomCaptureContainer: UIViewRepresentable {
     let controller: RoomScanController
 
-    func makeUIView(context: Context) -> RoomCaptureView { controller.captureView }
-    func updateUIView(_ uiView: RoomCaptureView, context: Context) {}
+    func makeUIView(context: Context) -> UIView {
+        let container = UIView(frame: ScreenSize.bounds)
+        container.backgroundColor = .black
+        let view = controller.captureView
+        view.frame = container.bounds
+        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        container.addSubview(view)
+        return container
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
 /// Vollbild-Scan eines Innenraums.
@@ -91,7 +117,8 @@ struct RoomScanScreen: View {
     let onComplete: (SiteScanRecord) -> Void
     let onCancel: () -> Void
 
-    @State private var controller = RoomScanController()
+    /// Wird erst beim Erscheinen erzeugt, damit SwiftUI keine überzähligen Scan-Ansichten anlegt.
+    @State private var controller: RoomScanController?
     @State private var pointCloud = ScanPointCloud()
     @State private var showPoints = true
     @State private var isSaving = false
@@ -99,29 +126,36 @@ struct RoomScanScreen: View {
 
     var body: some View {
         ZStack {
-            RoomCaptureContainer(controller: controller)
-                .ignoresSafeArea()
+            Color.black.ignoresSafeArea()
 
-            if showPoints, case .scanning = controller.phase {
-                PointCloudOverlay(session: controller.captureView.captureSession.arSession, cloud: pointCloud)
+            if let controller {
+                RoomCaptureContainer(controller: controller)
                     .ignoresSafeArea()
-            }
 
-            VStack {
-                HStack {
-                    Button("Abbrechen") {
-                        controller.cancel()
-                        onCancel()
-                    }
-                    .buttonStyle(.secondaryAction)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.controlRadius))
-                    Spacer()
-                    PointsToggle(isOn: $showPoints)
+                if showPoints, controller.isScanning {
+                    PointCloudOverlay(session: controller.captureView.captureSession.arSession, cloud: pointCloud)
+                        .ignoresSafeArea()
                 }
-                Spacer()
-                bottomPanel
+
+                VStack {
+                    HStack(spacing: 8) {
+                        Button("Abbrechen") {
+                            controller.cancel()
+                            onCancel()
+                        }
+                        .buttonStyle(.secondaryAction)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.controlRadius))
+                        Spacer()
+                        if controller.isScanning {
+                            PointCountBadge(cloud: pointCloud)
+                            PointsToggle(isOn: $showPoints)
+                        }
+                    }
+                    Spacer()
+                    bottomPanel(controller)
+                }
+                .padding()
             }
-            .padding()
 
             if isSaving {
                 ProgressView("Modell wird erstellt …")
@@ -129,26 +163,48 @@ struct RoomScanScreen: View {
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             }
         }
-        .onAppear { controller.start() }
-        .alert("Scan fehlgeschlagen", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-            Button("OK") { onCancel() }
+        .onAppear {
+            if controller == nil { controller = RoomScanController() }
+        }
+        .alert("Speichern fehlgeschlagen", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            Button("OK") {}
         } message: {
             Text(errorMessage ?? "")
         }
     }
 
     @ViewBuilder
-    private var bottomPanel: some View {
+    private func bottomPanel(_ controller: RoomScanController) -> some View {
         switch controller.phase {
+        case .ready:
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Raum scannen").font(.brand(.title3))
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Im Raum stehen, iPhone auf Brusthöhe halten.", systemImage: "iphone")
+                    Label("Langsam die Wände entlang schwenken, auch Ecken, Türen und Fenster.", systemImage: "arrow.triangle.turn.up.right.circle")
+                    Label("Grüne Punkte zeigen, was schon erfasst ist.", systemImage: "circle.grid.3x3.fill")
+                }
+                .font(.brand(.subheadline))
+                Button {
+                    pointCloud.reset()
+                    controller.start()
+                } label: {
+                    Label("Scan starten", systemImage: "record.circle")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.primaryAction)
+            }
+            .padding()
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
         case .scanning:
             VStack(spacing: 10) {
-                Text("Gehen Sie langsam durch den Raum und richten Sie das iPhone auf Wände, Türen und Fenster.")
+                Text("Langsam weiterschwenken, bis alle Wände erfasst sind.")
                     .font(.brand(.subheadline))
                     .multilineTextAlignment(.center)
                 Button {
                     controller.finish()
                 } label: {
-                    Label("Fertig", systemImage: "checkmark")
+                    Label("Scan beenden", systemImage: "stop.circle")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.primaryAction)
@@ -180,10 +236,21 @@ struct RoomScanScreen: View {
                 .disabled(isSaving)
             }
         case .failed(let message):
-            Text(message)
-                .font(.brand(.subheadline))
-                .padding()
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            VStack(spacing: 12) {
+                Text(message)
+                    .font(.brand(.subheadline))
+                    .multilineTextAlignment(.center)
+                Button {
+                    pointCloud.reset()
+                    controller.start()
+                } label: {
+                    Label("Erneut scannen", systemImage: "arrow.counterclockwise")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.primaryAction)
+            }
+            .padding()
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
         }
     }
 

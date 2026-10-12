@@ -36,6 +36,15 @@ enum ScanModelFile {
     }
 }
 
+/// Bildschirmgrösse des aktiven Fensters (für Views, die beim Erstellen eine Grösse brauchen).
+@MainActor
+enum ScreenSize {
+    static var bounds: CGRect {
+        let scene = UIApplication.shared.connectedScenes.first { $0.activationState == .foregroundActive } as? UIWindowScene
+        return scene?.screen.bounds ?? CGRect(x: 0, y: 0, width: 390, height: 844)
+    }
+}
+
 enum ScanError: LocalizedError {
     case saveFailed
     case emptyScan

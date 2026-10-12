@@ -16,7 +16,7 @@ final class MeshScanController {
     @ObservationIgnored private let delegateProxy = ARSessionDelegateProxy()
 
     init() {
-        arView = ARView(frame: .zero, cameraMode: .ar, automaticallyConfigureSession: false)
+        arView = ARView(frame: ScreenSize.bounds, cameraMode: .ar, automaticallyConfigureSession: false)
         delegateProxy.onMeshAnchorsAdded = { [weak self] count in
             self?.meshAnchorCount += count
         }
@@ -143,8 +143,17 @@ struct PointsToggle: View {
 private struct ARViewContainer: UIViewRepresentable {
     let controller: MeshScanController
 
-    func makeUIView(context: Context) -> ARView { controller.arView }
-    func updateUIView(_ uiView: ARView, context: Context) {}
+    func makeUIView(context: Context) -> UIView {
+        let container = UIView(frame: ScreenSize.bounds)
+        container.backgroundColor = .black
+        let view = controller.arView
+        view.frame = container.bounds
+        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        container.addSubview(view)
+        return container
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
 /// Vollbild-Scan der Umgebung (auch aussen).
@@ -152,7 +161,9 @@ struct MeshScanScreen: View {
     let onComplete: (SiteScanRecord) -> Void
     let onCancel: () -> Void
 
-    @State private var controller = MeshScanController()
+    /// Wird erst beim Erscheinen erzeugt, damit SwiftUI keine überzähligen AR-Ansichten anlegt.
+    @State private var controller: MeshScanController?
+    @State private var isRunning = false
     @State private var pointCloud = ScanPointCloud()
     @State private var showPoints = true
     @State private var isSaving = false
@@ -160,55 +171,43 @@ struct MeshScanScreen: View {
 
     var body: some View {
         ZStack {
-            ARViewContainer(controller: controller)
-                .ignoresSafeArea()
+            Color.black.ignoresSafeArea()
 
-            if showPoints {
-                PointCloudOverlay(session: controller.arView.session, cloud: pointCloud)
+            if let controller {
+                ARViewContainer(controller: controller)
                     .ignoresSafeArea()
-            }
 
-            VStack(spacing: 12) {
-                HStack {
-                    Button("Abbrechen") {
-                        controller.stop()
-                        onCancel()
+                if showPoints, isRunning {
+                    PointCloudOverlay(session: controller.arView.session, cloud: pointCloud)
+                        .ignoresSafeArea()
+                }
+
+                VStack(spacing: 12) {
+                    HStack(spacing: 8) {
+                        Button("Abbrechen") {
+                            controller.stop()
+                            onCancel()
+                        }
+                        .buttonStyle(.secondaryAction)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.controlRadius))
+                        Spacer()
+                        if isRunning {
+                            PointCountBadge(cloud: pointCloud)
+                            PointsToggle(isOn: $showPoints)
+                        }
                     }
-                    .buttonStyle(.secondaryAction)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.controlRadius))
+                    if isRunning, let hint = controller.trackingHint {
+                        Text(hint)
+                            .font(.brand(.subheadline))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.smallRadius))
+                    }
                     Spacer()
-                    PointsToggle(isOn: $showPoints)
-                    Text("\(controller.meshAnchorCount) Abschnitte")
-                        .font(.brand(.footnote).monospacedDigit())
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.smallRadius))
-                }
-                if let hint = controller.trackingHint {
-                    Text(hint)
-                        .font(.brand(.subheadline))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.smallRadius))
-                }
-                Spacer()
-                VStack(spacing: 10) {
-                    Text("Bewegen Sie das iPhone langsam über Boden, Wände und Objekte. Abstand höchstens 5 m.")
-                        .font(.brand(.subheadline))
-                        .multilineTextAlignment(.center)
-                    Button {
-                        save()
-                    } label: {
-                        Label("Fertig", systemImage: "checkmark")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.primaryAction)
-                    .disabled(controller.meshAnchorCount == 0 || isSaving)
+                    bottomPanel(controller)
                 }
                 .padding()
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             }
-            .padding()
 
             if isSaving {
                 ProgressView("Modell wird erstellt …")
@@ -216,8 +215,10 @@ struct MeshScanScreen: View {
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             }
         }
-        .onAppear { controller.start() }
-        .onDisappear { controller.stop() }
+        .onAppear {
+            if controller == nil { controller = MeshScanController() }
+        }
+        .onDisappear { controller?.stop() }
         .alert("Scan fehlgeschlagen", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK") {}
         } message: {
@@ -225,10 +226,57 @@ struct MeshScanScreen: View {
         }
     }
 
-    private func save() {
+    @ViewBuilder
+    private func bottomPanel(_ controller: MeshScanController) -> some View {
+        if isRunning {
+            VStack(spacing: 10) {
+                Text("Langsam über Boden, Wände und Objekte schwenken. Abstand höchstens 5 m.")
+                    .font(.brand(.subheadline))
+                    .multilineTextAlignment(.center)
+                Button {
+                    save(controller)
+                } label: {
+                    Label("Scan beenden", systemImage: "stop.circle")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.primaryAction)
+                .disabled(controller.meshAnchorCount == 0 || isSaving)
+            }
+            .padding()
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Umgebung scannen").font(.brand(.title3))
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Funktioniert auch draussen, Reichweite rund 5 m.", systemImage: "sun.max")
+                    Label("Langsam gehen und das iPhone ruhig über Boden, Fassade und Objekte führen.", systemImage: "figure.walk")
+                    Label("Grüne Punkte zeigen, was schon erfasst ist.", systemImage: "circle.grid.3x3.fill")
+                }
+                .font(.brand(.subheadline))
+                Button {
+                    start(controller)
+                } label: {
+                    Label("Scan starten", systemImage: "record.circle")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.primaryAction)
+            }
+            .padding()
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+        }
+    }
+
+    private func start(_ controller: MeshScanController) {
+        pointCloud.reset()
+        controller.start()
+        isRunning = true
+    }
+
+    private func save(_ controller: MeshScanController) {
         isSaving = true
         let mesh = controller.collectMesh()
         controller.stop()
+        isRunning = false
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(80))
             do {
@@ -240,8 +288,6 @@ struct MeshScanScreen: View {
             } catch {
                 isSaving = false
                 errorMessage = error.localizedDescription
-                pointCloud.reset()
-                controller.start()
             }
         }
     }

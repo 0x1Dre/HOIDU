@@ -122,4 +122,19 @@ struct PointCloudOverlay: View {
         return scene?.effectiveGeometry.interfaceOrientation ?? .portrait
     }
 }
+/// Anzahl erfasster Punkte; 0 bedeutet, dass die Kamera noch keine Tiefendaten liefert.
+struct PointCountBadge: View {
+    let cloud: ScanPointCloud
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 0.5)) { _ in
+            Label("\(cloud.count)", systemImage: "circle.grid.3x3.fill")
+                .font(.brand(.footnote).monospacedDigit())
+                .padding(.horizontal, 10)
+                .frame(minHeight: Theme.minimumTouchTarget)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.controlRadius))
+                .accessibilityLabel("\(cloud.count) Punkte erfasst")
+        }
+    }
+}
 #endif
