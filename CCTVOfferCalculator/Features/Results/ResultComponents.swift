@@ -469,7 +469,7 @@ struct MaintenanceOptionsView: View {
         switch selection.package {
         case .premium: "Im Premium-Paket inbegriffen."
         case .business: "Bei Business empfohlen und vorausgewählt; der Anteil ist im Monatspreis enthalten."
-        case .basic: "Option bei Basic; der Anteil wird zum Monatspreis addiert."
+        case .basic: "Option bei Basic – bei Bedarf einschalten; der Anteil wird zum Monatspreis addiert."
         case nil: "Nur mit Wartungspaket möglich."
         }
     }
@@ -481,13 +481,13 @@ struct MaintenanceOptionsView: View {
         }
     }
 
-    /// Paket übernehmen. Business und Premium: Vor-Ort-Check einschalten; ohne Wartung ausschalten.
+    /// Paket übernehmen. Business und Premium: Vor-Ort-Check ein; Basic und ohne Wartung: aus
+    /// (bei Basic lässt er sich danach als Option wieder einschalten).
     private func apply(_ package: MaintenancePackage?) {
         selection.package = package
         switch package {
         case .business, .premium: selection.includeOnSiteCheck = true
-        case nil: selection.includeOnSiteCheck = false
-        case .basic: break
+        case .basic, nil: selection.includeOnSiteCheck = false
         }
     }
 }
