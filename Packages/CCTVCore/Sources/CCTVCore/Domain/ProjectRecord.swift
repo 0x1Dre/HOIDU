@@ -355,9 +355,10 @@ public struct MaintenanceSelection: Codable, Hashable, Sendable {
     public var package: MaintenancePackage?
     public var includeOnSiteCheck: Bool
 
-    public init(package: MaintenancePackage? = .business, includeOnSiteCheck: Bool = false) {
+    /// Ohne Angabe ist der jährliche Vor-Ort-Check bei Business und Premium eingeschaltet.
+    public init(package: MaintenancePackage? = .business, includeOnSiteCheck: Bool? = nil) {
         self.package = package
-        self.includeOnSiteCheck = includeOnSiteCheck
+        self.includeOnSiteCheck = includeOnSiteCheck ?? (package == .business || package == .premium)
     }
 }
 

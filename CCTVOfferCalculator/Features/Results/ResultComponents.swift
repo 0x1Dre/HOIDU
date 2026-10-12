@@ -437,9 +437,10 @@ struct MaintenanceOptionsView: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Jährlicher Vor-Ort-Check", isOn: $selection.includeOnSiteCheck)
+                Toggle("Jährlicher Vor-Ort-Check", isOn: onSiteBinding)
                     .frame(minHeight: 44)
-                Text("Option bei Basic und Business, bei Premium inbegriffen.")
+                    .disabled(selection.package == .premium || selection.package == nil)
+                Text(onSiteNote)
                     .font(.brand(.caption))
                     .foregroundStyle(.secondary)
             }
@@ -449,9 +450,32 @@ struct MaintenanceOptionsView: View {
 
     private var columns: Int { horizontalSizeClass == .compact ? 1 : 3 }
 
+    /// Bei Premium ist der Check inbegriffen und wird als eingeschaltet angezeigt.
+    private var onSiteBinding: Binding<Bool> {
+        Binding(
+            get: { selection.package == .premium || selection.includeOnSiteCheck },
+            set: { selection.includeOnSiteCheck = $0 }
+        )
+    }
+
+    private var onSiteNote: String {
+        switch selection.package {
+        case .premium: "Im Premium-Paket inbegriffen."
+        case .business: "Bei Business empfohlen und vorausgewählt; der Anteil ist im Monatspreis enthalten."
+        case .basic: "Option bei Basic; der Anteil wird zum Monatspreis addiert."
+        case nil: "Nur mit Wartungspaket möglich."
+        }
+    }
+
     private func select(_ package: MaintenancePackage?) {
         withAnimation(.snappy) {
             selection.package = package
+            // Business und Premium: Vor-Ort-Check einschalten; ohne Wartung ausschalten.
+            switch package {
+            case .business, .premium: selection.includeOnSiteCheck = true
+            case nil: selection.includeOnSiteCheck = false
+            case .basic: break
+            }
             scrolledID = package?.rawValue ?? Self.noneID
         }
     }

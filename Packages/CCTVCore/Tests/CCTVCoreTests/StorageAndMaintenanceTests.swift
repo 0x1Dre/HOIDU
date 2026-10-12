@@ -122,4 +122,12 @@ final class MaintenanceCalculatorTests: XCTestCase {
         XCTAssertLessThan(quotes[0].monthlyNet, quotes[1].monthlyNet)
         XCTAssertLessThan(quotes[1].monthlyNet, quotes[2].monthlyNet)
     }
+
+    func testOnSiteCheckDefaultsOnForBusinessAndPremium() {
+        XCTAssertTrue(MaintenanceSelection().includeOnSiteCheck)
+        XCTAssertTrue(MaintenanceSelection(package: .premium).includeOnSiteCheck)
+        XCTAssertFalse(MaintenanceSelection(package: .basic).includeOnSiteCheck)
+        XCTAssertFalse(MaintenanceSelection(package: nil).includeOnSiteCheck)
+        XCTAssertFalse(MaintenanceSelection(package: .business, includeOnSiteCheck: false).includeOnSiteCheck)
+    }
 }
