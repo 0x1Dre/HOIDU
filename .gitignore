@@ -11,3 +11,6 @@ xcuserdata/
 *.ipa
 *.dSYM.zip
 *.dSYM
+
+# Website: Mail-Zugangsdaten auf dem Server, nie einchecken
+ostsicht-mail.php
