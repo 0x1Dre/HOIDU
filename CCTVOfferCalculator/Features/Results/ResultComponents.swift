@@ -407,7 +407,9 @@ struct MaintenanceOptionsView: View {
 
             // Wischbares Karussell: auf dem iPhone eine Karte pro Seite, auf dem iPad drei.
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(alignment: .top, spacing: 12) {
+                // Normale HStack (nicht lazy), damit die Höhe der höchsten Karte gemessen wird;
+                // mit fixedSize werden alle Karten gleich hoch.
+                HStack(alignment: .top, spacing: 12) {
                     NoMaintenanceCard(isSelected: selection.package == nil)
                         .containerRelativeFrame(.horizontal, count: columns, spacing: 12)
                         .onTapGesture { select(nil) }
@@ -419,6 +421,7 @@ struct MaintenanceOptionsView: View {
                             .id(quote.package.rawValue)
                     }
                 }
+                .fixedSize(horizontal: false, vertical: true)
                 .scrollTargetLayout()
             }
             .scrollTargetBehavior(.viewAligned)
@@ -477,7 +480,7 @@ private struct NoMaintenanceCard: View {
             Spacer(minLength: 0)
         }
         .padding(12)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(isSelected ? Theme.gruenSolid.opacity(0.08) : Theme.card, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
             .strokeBorder(isSelected ? Theme.gruen : Theme.separator.opacity(0.4), lineWidth: isSelected ? 2 : 0.5))
@@ -537,7 +540,7 @@ struct MaintenanceQuoteCard: View {
             }
         }
         .padding(12)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(isSelected ? Theme.gruenSolid.opacity(0.08) : Theme.card, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
             .strokeBorder(isSelected ? Theme.gruen : Theme.separator.opacity(0.4), lineWidth: isSelected ? 2 : 0.5))
