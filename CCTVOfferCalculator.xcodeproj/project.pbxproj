@@ -19,6 +19,10 @@
 			isa = PBXBuildFile;
 			fileRef = F2AD70BBCDD996D3F8EE8FF7;
 		};
+		0E7A10BCF97AF2516A5F1999 = {
+			isa = PBXBuildFile;
+			fileRef = C68AB11C6997598858512A88;
+		};
 		12AB6941A2B800A0D117ED33 = {
 			isa = PBXBuildFile;
 			fileRef = A8204A2A2DCDBBBD6AF35D28;
@@ -86,6 +90,10 @@
 		4C07F44A4F178A28437C9BF6 = {
 			isa = PBXBuildFile;
 			fileRef = A8640BEE992930E80D2C6655;
+		};
+		4CD37015276BBA9BD0C297E8 = {
+			isa = PBXBuildFile;
+			fileRef = 7889AE9199C50479E744D483;
 		};
 		4DEC963ACB88D685859BE4D7 = {
 			isa = PBXBuildFile;
@@ -482,6 +490,12 @@
 			path = OptionChips.swift;
 			sourceTree = "<group>";
 		};
+		7889AE9199C50479E744D483 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = ScanTexturing.swift;
+			sourceTree = "<group>";
+		};
 		7A1E25C8174132E2E526D3C9 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
@@ -625,6 +639,12 @@
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
 			path = OstsichtBrand.swift;
+			sourceTree = "<group>";
+		};
+		C68AB11C6997598858512A88 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = ScanKeyframes.swift;
 			sourceTree = "<group>";
 		};
 		CC4D0B54C6D8655A37A0C715 = {
@@ -867,8 +887,10 @@
 				B92780C79848A21A4442AA09,
 				A6BB2DD1A6886D63131E8293,
 				69B7CAF84BC17EAD646FB599,
+				C68AB11C6997598858512A88,
 				98CDFE694A17BCBE5C3FDA36,
 				16E6CB28F68DCA159429AEC7,
+				7889AE9199C50479E744D483,
 				A8204A2A2DCDBBBD6AF35D28,
 			);
 			path = Scan;
@@ -1091,8 +1113,10 @@
 				5B89C39B4369E2EADE54312D,
 				4DEC963ACB88D685859BE4D7,
 				B47CB3CDBC2871C960E59CDD,
+				0E7A10BCF97AF2516A5F1999,
 				14C9B472C1E6F1EDD74B3669,
 				3C6148A46D84F29913DDDCE8,
+				4CD37015276BBA9BD0C297E8,
 				12AB6941A2B800A0D117ED33,
 				08866F935F658CED1A1850CA,
 				7A3A3C22FDD805424417F4E6,
@@ -1175,7 +1199,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;

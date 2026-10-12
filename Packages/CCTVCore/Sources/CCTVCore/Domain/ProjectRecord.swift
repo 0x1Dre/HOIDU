@@ -483,6 +483,7 @@ public struct ProjectRecord: Codable, Hashable, Sendable, Identifiable {
             var scan = scan
             scan.modelData = nil
             scan.floorPlan = nil
+            scan.photos = scan.photos.map { var p = $0; p.imageData = nil; return p }
             return scan
         }
         return copy

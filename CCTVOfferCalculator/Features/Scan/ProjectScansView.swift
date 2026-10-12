@@ -5,7 +5,7 @@ import CCTVCore
 struct ProjectScansView: View {
     let record: ProjectRecord
     let onAdd: (SiteScanRecord) -> Void
-    let onUpdate: (_ id: UUID, _ name: String, _ note: String, _ placements: [ScanCameraPlacement]) -> Void
+    let onUpdate: (_ id: UUID, _ edits: ScanEdits) -> Void
     let onDelete: (UUID) -> Void
 
     @State private var captureKind: ScanKind?
@@ -89,7 +89,7 @@ struct ProjectScansView: View {
             ScanEditorView(
                 project: record,
                 scanID: item.id,
-                onChange: { name, note, placements in onUpdate(item.id, name, note, placements) },
+                onChange: { edits in onUpdate(item.id, edits) },
                 onDelete: { onDelete(item.id) }
             )
         }

@@ -30,6 +30,12 @@ final class MeshScanController {
         configuration.sceneReconstruction = .mesh
         configuration.environmentTexturing = .none
         configuration.planeDetection = [.horizontal, .vertical]
+        // Tiefenkarte für dichte Punkte und die Verdeckungsprüfung beim Einfärben
+        if ARWorldTrackingConfiguration.supportsFrameSemantics(.smoothedSceneDepth) {
+            configuration.frameSemantics.insert(.smoothedSceneDepth)
+        } else if ARWorldTrackingConfiguration.supportsFrameSemantics(.sceneDepth) {
+            configuration.frameSemantics.insert(.sceneDepth)
+        }
         arView.renderOptions.insert(.disableMotionBlur)
         arView.session.delegate = delegateProxy
         arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
@@ -164,7 +170,7 @@ struct MeshScanScreen: View {
     /// Wird erst beim Erscheinen erzeugt, damit SwiftUI keine überzähligen AR-Ansichten anlegt.
     @State private var controller: MeshScanController?
     @State private var isRunning = false
-    @State private var pointCloud = ScanPointCloud()
+    @State private var captureData = ScanCaptureData()
     @State private var showPoints = true
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -178,7 +184,7 @@ struct MeshScanScreen: View {
                     .ignoresSafeArea()
 
                 if showPoints, isRunning {
-                    PointCloudOverlay(session: controller.arView.session, cloud: pointCloud)
+                    PointCloudOverlay(session: controller.arView.session, cloud: captureData.cloud)
                         .ignoresSafeArea()
                 }
 
@@ -192,7 +198,7 @@ struct MeshScanScreen: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.controlRadius))
                         Spacer()
                         if isRunning {
-                            PointCountBadge(cloud: pointCloud)
+                            PointCountBadge(cloud: captureData.cloud)
                             PointsToggle(isOn: $showPoints)
                         }
                     }
@@ -210,7 +216,7 @@ struct MeshScanScreen: View {
             }
 
             if isSaving {
-                ProgressView("Modell wird erstellt …")
+                ProgressView("Modell und Farben werden erstellt …")
                     .padding(24)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             }
@@ -219,6 +225,7 @@ struct MeshScanScreen: View {
             if controller == nil { controller = MeshScanController() }
         }
         .onDisappear { controller?.stop() }
+        .modifier(ScanFrameCollector(data: captureData, isActive: isRunning))
         .alert("Scan fehlgeschlagen", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK") {}
         } message: {
@@ -267,22 +274,33 @@ struct MeshScanScreen: View {
     }
 
     private func start(_ controller: MeshScanController) {
-        pointCloud.reset()
+        captureData.reset()
+        captureData.session = controller.arView.session
         controller.start()
         isRunning = true
     }
 
     private func save(_ controller: MeshScanController) {
         isSaving = true
-        let mesh = controller.collectMesh()
+        let collected = controller.collectMesh()
+        let keyframes = captureData.keyframes.keyframes
         controller.stop()
         isRunning = false
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(80))
             do {
+                var mesh = collected
                 guard !mesh.isEmpty else { throw ScanError.emptyScan }
+                if !keyframes.isEmpty {
+                    let vertices = mesh.vertices, normals = mesh.normals
+                    mesh.colors = await Task.detached(priority: .userInitiated) {
+                        ScanTexturing.vertexColors(vertices: vertices, normals: normals, sampler: KeyframeSampler(keyframes: keyframes))
+                    }.value
+                }
                 let data = try ScanModelFile.data(from: mesh.makeScene())
-                let record = SiteScanRecord(kind: .umgebung, modelData: data, floorPlan: mesh.makeFloorPlan())
+                let photos = ScanTexturing.photos(from: keyframes)
+                let record = SiteScanRecord(kind: .umgebung, modelData: data, floorPlan: mesh.makeFloorPlan(),
+                                            photos: photos.photos, photoPoses: photos.poses)
                 isSaving = false
                 onComplete(record)
             } catch {

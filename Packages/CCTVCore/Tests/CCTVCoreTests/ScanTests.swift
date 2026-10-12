@@ -126,6 +126,51 @@ final class ScanTests: XCTestCase {
         XCTAssertTrue(document.plainText.contains("Werkstatt"))
     }
 
+    private func projectWithScanPhotos() -> ProjectRecord {
+        var project = projectWithScan()
+        let photo = PhotoRecord(caption: "Aufnahme 1", imageData: Data(repeating: 0xCD, count: 24))
+        let hidden = PhotoRecord(caption: "Intern", imageData: Data(repeating: 0xEF, count: 24), includeInCustomerPDF: false)
+        project.scans[0].areaID = project.areas[0].id
+        project.scans[0].photos = [photo, hidden]
+        project.scans[0].photoPoses = [ScanPhotoPose(photoID: photo.id, x: 1, y: 1.5, z: 2, yawDegrees: 370)]
+        return project
+    }
+
+    func testScanPhotosAndAreaSurviveDuplicateWithNewIdentifiers() throws {
+        let original = projectWithScanPhotos()
+        let copy = ProjectExchange.duplicateWithNewIdentifiers(original)
+        let scan = copy.scans[0]
+        XCTAssertEqual(scan.areaID, copy.areas[0].id)
+        XCTAssertNotEqual(scan.photos[0].id, original.scans[0].photos[0].id)
+        let pose = try XCTUnwrap(scan.pose(for: scan.photos[0].id))
+        XCTAssertEqual(pose.yawDegrees, 10, accuracy: 0.0001)
+        XCTAssertEqual(copy.areaName(for: scan), "Bereich A")
+    }
+
+    func testCompactExportStripsScanPhotoData() throws {
+        let file = try ProjectExchange.importProject(try ProjectExchange.export(projectWithScanPhotos(), appVersion: "1.0", includePhotos: false))
+        XCTAssertEqual(file.project.scans[0].photos.count, 2)
+        XCTAssertNil(file.project.scans[0].photos[0].imageData)
+        XCTAssertEqual(file.project.scans[0].photoPoses.count, 1)
+    }
+
+    func testCustomerOfferShowsOnlyReleasedScanPhotos() {
+        let project = projectWithScanPhotos()
+        let analysis = OfferVariantBuilder.analyze(project: project, catalog: Fixtures.catalog, settings: Fixtures.settings)
+        func photos(_ audience: DocumentAudience, include: Bool) -> [String] {
+            let document = OfferDocumentBuilder.build(project: project, analysis: analysis, company: CompanyProfile(),
+                                                      options: DocumentOptions(audience: audience, offerNumber: "1", includePhotosInCustomerPDF: include))
+            let section = document.sections.first { $0.title == "Grundriss und Kamerastandorte" }
+            return section?.blocks.flatMap { block -> [String] in
+                if case .photos(let photos) = block { return photos.map(\.title) }
+                return []
+            } ?? []
+        }
+        XCTAssertEqual(photos(.customer, include: true), ["Aufnahme 1"])
+        XCTAssertEqual(photos(.customer, include: false), [])
+        XCTAssertEqual(photos(.internal, include: false), ["Aufnahme 1", "Intern"])
+    }
+
     func testOfferWithoutFloorPlanHasNoSection() {
         var project = projectWithScan()
         project.scans[0].floorPlan = nil

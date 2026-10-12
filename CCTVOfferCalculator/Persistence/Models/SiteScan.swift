@@ -15,6 +15,10 @@ final class SiteScan {
     @Attribute(.externalStorage) var floorPlanImageData: Data?
     var floorPlanBoundsData: Data?
     var placementsData: Data?
+    var areaID: UUID?
+    /// Fotos zum Scan als JSON (Bilddaten eingebettet), ausserhalb der Datenbank.
+    @Attribute(.externalStorage) var photosData: Data?
+    var photoPosesData: Data?
     var project: Project?
 
     init(id: UUID) {
@@ -33,6 +37,16 @@ final class SiteScan {
         return ScanFloorPlan(imageData: floorPlanImageData, bounds: bounds)
     }
 
+    var photos: [PhotoRecord] {
+        guard let photosData else { return [] }
+        return (try? JSONDecoder().decode([PhotoRecord].self, from: photosData)) ?? []
+    }
+
+    var photoPoses: [ScanPhotoPose] {
+        guard let photoPosesData else { return [] }
+        return (try? JSONDecoder().decode([ScanPhotoPose].self, from: photoPosesData)) ?? []
+    }
+
     var record: SiteScanRecord {
         SiteScanRecord(
             id: id,
@@ -42,7 +56,10 @@ final class SiteScan {
             modelData: modelData,
             floorPlan: floorPlan,
             placements: placements,
-            note: note
+            note: note,
+            areaID: areaID,
+            photos: photos,
+            photoPoses: photoPoses
         )
     }
 
@@ -55,6 +72,11 @@ final class SiteScan {
 
         let encodedPlacements = record.placements.isEmpty ? nil : try? JSONEncoder().encode(record.placements)
         if placementsData != encodedPlacements { placementsData = encodedPlacements }
+        if areaID != record.areaID { areaID = record.areaID }
+        let encodedPhotos = record.photos.isEmpty ? nil : try? JSONEncoder().encode(record.photos)
+        if photosData != encodedPhotos { photosData = encodedPhotos }
+        let encodedPoses = record.photoPoses.isEmpty ? nil : try? JSONEncoder().encode(record.photoPoses)
+        if photoPosesData != encodedPoses { photoPosesData = encodedPoses }
 
         // Grosse Daten nur schreiben, wenn sie sich geändert haben.
         if modelData != record.modelData { modelData = record.modelData }

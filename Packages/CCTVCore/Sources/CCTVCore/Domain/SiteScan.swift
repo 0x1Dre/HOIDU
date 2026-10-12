@@ -176,6 +176,27 @@ public struct ScanCameraPlacement: Codable, Hashable, Sendable, Identifiable {
     }
 }
 
+/// Aufnahmeort eines Fotos im Scan (automatische Aufnahmen beim Scannen).
+public struct ScanPhotoPose: Codable, Hashable, Sendable {
+    public var photoID: UUID
+    public var x: Double
+    public var y: Double
+    public var z: Double
+    /// Blickrichtung im Grundriss wie bei den Kameras (0 = oben, im Uhrzeigersinn).
+    public var yawDegrees: Double
+    /// Neigung nach unten in Grad (negativ = nach oben).
+    public var pitchDegrees: Double
+
+    public init(photoID: UUID, x: Double, y: Double, z: Double, yawDegrees: Double, pitchDegrees: Double = 0) {
+        self.photoID = photoID
+        self.x = x
+        self.y = y
+        self.z = z
+        self.yawDegrees = ScanCameraPlacement.normalizedYaw(yawDegrees)
+        self.pitchDegrees = pitchDegrees.isFinite ? pitchDegrees : 0
+    }
+}
+
 /// 3D-Scan eines Raums oder einer Umgebung mit darin platzierten Kameras.
 public struct SiteScanRecord: Codable, Hashable, Sendable, Identifiable {
     public var id: UUID
@@ -188,6 +209,12 @@ public struct SiteScanRecord: Codable, Hashable, Sendable, Identifiable {
     public var floorPlan: ScanFloorPlan?
     public var placements: [ScanCameraPlacement]
     public var note: String
+    /// Zugeordneter Überwachungsbereich (optional).
+    public var areaID: UUID?
+    /// Fotos zum Scan: automatische Aufnahmen beim Scannen und eigene Fotos.
+    public var photos: [PhotoRecord]
+    /// Aufnahmeorte der automatischen Fotos.
+    public var photoPoses: [ScanPhotoPose]
 
     public init(
         id: UUID = UUID(),
@@ -197,7 +224,10 @@ public struct SiteScanRecord: Codable, Hashable, Sendable, Identifiable {
         modelData: Data? = nil,
         floorPlan: ScanFloorPlan? = nil,
         placements: [ScanCameraPlacement] = [],
-        note: String = ""
+        note: String = "",
+        areaID: UUID? = nil,
+        photos: [PhotoRecord] = [],
+        photoPoses: [ScanPhotoPose] = []
     ) {
         self.id = id
         self.name = name
@@ -207,6 +237,13 @@ public struct SiteScanRecord: Codable, Hashable, Sendable, Identifiable {
         self.floorPlan = floorPlan
         self.placements = placements
         self.note = note
+        self.areaID = areaID
+        self.photos = photos
+        self.photoPoses = photoPoses
+    }
+
+    public func pose(for photoID: UUID) -> ScanPhotoPose? {
+        photoPoses.first { $0.photoID == photoID }
     }
 
     public var displayName: String {
@@ -215,7 +252,7 @@ public struct SiteScanRecord: Codable, Hashable, Sendable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, kind, createdAt, modelData, floorPlan, placements, note
+        case id, name, kind, createdAt, modelData, floorPlan, placements, note, areaID, photos, photoPoses
     }
 
     public init(from decoder: Decoder) throws {
@@ -228,6 +265,9 @@ public struct SiteScanRecord: Codable, Hashable, Sendable, Identifiable {
         floorPlan = try c.decodeIfPresent(ScanFloorPlan.self, forKey: .floorPlan)
         placements = try c.decodeIfPresent([ScanCameraPlacement].self, forKey: .placements) ?? []
         note = try c.decodeIfPresent(String.self, forKey: .note) ?? ""
+        areaID = try c.decodeIfPresent(UUID.self, forKey: .areaID)
+        photos = try c.decodeIfPresent([PhotoRecord].self, forKey: .photos) ?? []
+        photoPoses = try c.decodeIfPresent([ScanPhotoPose].self, forKey: .photoPoses) ?? []
     }
 }
 
@@ -252,6 +292,12 @@ public extension ProjectRecord {
     func areaName(for placement: ScanCameraPlacement) -> String? {
         guard let id = placement.positionID else { return nil }
         return allPositions.first { $0.position.id == id }?.area.name
+    }
+
+    /// Name des zugeordneten Bereichs eines Scans.
+    func areaName(for scan: SiteScanRecord) -> String? {
+        guard let id = scan.areaID else { return nil }
+        return areas.first { $0.id == id }?.name
     }
 
     var placedCameraCount: Int {

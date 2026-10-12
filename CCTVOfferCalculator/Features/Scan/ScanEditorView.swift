@@ -3,12 +3,23 @@ import SceneKit
 import simd
 import CCTVCore
 
-/// Bearbeitung eines 3D-Scans: Kameras im Modell platzieren, ausrichten und mit Kamerapositionen verknüpfen.
+/// Änderungen an einem Scan, die der Editor speichert.
+struct ScanEdits: Equatable {
+    var name: String
+    var note: String
+    var placements: [ScanCameraPlacement]
+    var photos: [PhotoRecord]
+    var photoPoses: [ScanPhotoPose]
+    var areaID: UUID?
+}
+
+/// Bearbeitung eines 3D-Scans: Kameras im Modell platzieren, ausrichten und mit Kamerapositionen verknüpfen;
+/// Fotos und Überwachungsbereich zuordnen.
 struct ScanEditorView: View {
     let project: ProjectRecord
     let scanID: UUID
-    /// Speichert Name, Notiz und Platzierungen (verzögert, damit Schieberegler nicht bei jedem Schritt speichern).
-    let onChange: (_ name: String, _ note: String, _ placements: [ScanCameraPlacement]) -> Void
+    /// Speichert die Änderungen (verzögert, damit Schieberegler nicht bei jedem Schritt speichern).
+    let onChange: (ScanEdits) -> Void
     let onDelete: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -17,6 +28,11 @@ struct ScanEditorView: View {
     @State private var name = ""
     @State private var note = ""
     @State private var placements: [ScanCameraPlacement] = []
+    @State private var photos: [PhotoRecord] = []
+    @State private var photoPoses: [ScanPhotoPose] = []
+    @State private var areaID: UUID?
+    @State private var thumbnails: [UUID: UIImage] = [:]
+    @State private var viewingPhoto: PhotoRecord?
     @State private var selectedID: UUID?
     @State private var isPlacing = false
     @State private var mode: Mode = .model
@@ -26,9 +42,22 @@ struct ScanEditorView: View {
     @State private var showRename = false
 
     private enum Mode: String, CaseIterable, Identifiable {
-        case model, plan
+        case model, plan, photos
         var id: String { rawValue }
-        var title: String { self == .model ? "3D" : "Grundriss" }
+        var title: String {
+            switch self {
+            case .model: "3D"
+            case .plan: "Grundriss"
+            case .photos: "Fotos"
+            }
+        }
+    }
+
+    private var edits: ScanEdits {
+        // Aufnahmeorte gelöschter Fotos nicht behalten.
+        let ids = Set(photos.map(\.id))
+        return ScanEdits(name: name, note: note, placements: placements, photos: photos,
+                         photoPoses: photoPoses.filter { ids.contains($0.photoID) }, areaID: areaID)
     }
 
     private var scan: SiteScanRecord? { project.scans.first { $0.id == scanID } }
@@ -62,6 +91,7 @@ struct ScanEditorView: View {
                 switch mode {
                 case .model: modelView
                 case .plan: planView
+                case .photos: photosView
                 }
             }
             .background(Theme.background)
@@ -126,6 +156,10 @@ struct ScanEditorView: View {
             name = scan.name
             note = scan.note
             placements = scan.placements
+            photos = scan.photos
+            photoPoses = scan.photoPoses
+            areaID = scan.areaID
+            thumbnails = Self.makeThumbnails(scan.photos, poses: scan.photoPoses)
             guard let data = scan.modelData else {
                 loadError = "Für diesen Scan ist kein 3D-Modell gespeichert (z. B. nach einem Import ohne Fotos)."
                 mode = .plan
@@ -145,6 +179,8 @@ struct ScanEditorView: View {
         }
         .onChange(of: placements) { _, _ in scheduleSave() }
         .onChange(of: name) { _, _ in scheduleSave() }
+        .onChange(of: photos) { _, _ in scheduleSave() }
+        .onChange(of: areaID) { _, _ in scheduleSave() }
         .onDisappear { flushSave() }
     }
 
@@ -160,10 +196,23 @@ struct ScanEditorView: View {
                     numbers: numbers,
                     selectedID: selectedID,
                     isPlacing: isPlacing,
+                    photoPoses: photoPoses.filter { pose in photos.contains { $0.id == pose.photoID } },
+                    photoThumbnails: thumbnails,
                     onPlace: place,
-                    onSelect: { selectedID = $0 }
+                    onSelect: { selectedID = $0 },
+                    onSelectPhoto: { id in viewingPhoto = photos.first { $0.id == id } }
                 )
                 .ignoresSafeArea(edges: .bottom)
+                .sheet(item: $viewingPhoto) { photo in
+                    NavigationStack {
+                        PhotoViewer(photo: photo)
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Fertig") { viewingPhoto = nil }
+                                }
+                            }
+                    }
+                }
 
                 VStack(spacing: 8) {
                     if isPlacing {
@@ -250,6 +299,87 @@ struct ScanEditorView: View {
         .onChange(of: note) { _, _ in scheduleSave() }
     }
 
+    // MARK: - Fotos
+
+    private var linkedArea: SiteAreaRecord? {
+        areaID.flatMap { id in project.areas.first { $0.id == id } }
+    }
+
+    private var photosView: some View {
+        Form {
+            Section {
+                Picker("Überwachungsbereich", selection: $areaID) {
+                    Text("Keiner").tag(UUID?.none)
+                    ForEach(project.areas) { area in
+                        Text(area.name.isEmpty ? "Ohne Namen" : area.name).tag(UUID?.some(area.id))
+                    }
+                }
+            } footer: {
+                Text("Verknüpft den Scan mit einem Bereich. Dessen Fotos erscheinen hier, der Bereich steht beim Grundriss in der Offerte.")
+            }
+
+            Section {
+                PhotoGalleryEditor(photos: $photos, captionSuggestion: name.isEmpty ? "Scan" : name)
+            } header: {
+                Text("Fotos zum Scan")
+            } footer: {
+                Text("Aufnahmen vom Scannen sind im 3D-Modell an ihrem Standort zu sehen; antippen öffnet das Foto.")
+            }
+
+            if let linkedArea {
+                let areaPhotos = linkedArea.allPhotos
+                Section("Fotos aus «\(linkedArea.name)»") {
+                    if areaPhotos.isEmpty {
+                        Text("Keine Fotos im Bereich erfasst.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 10) {
+                                ForEach(areaPhotos) { photo in
+                                    Button {
+                                        viewingPhoto = photo
+                                    } label: {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            PhotoThumbnail(photo: photo, size: 110)
+                                            Text(photo.caption.isEmpty ? "Foto" : photo.caption)
+                                                .font(.brand(.caption))
+                                                .lineLimit(1)
+                                                .frame(width: 110, alignment: .leading)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .sheet(item: $viewingPhoto) { photo in
+            NavigationStack {
+                PhotoViewer(photo: photo)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Fertig") { viewingPhoto = nil }
+                        }
+                    }
+            }
+        }
+    }
+
+    /// Kleine Vorschaubilder für die Fotos im 3D-Modell.
+    private static func makeThumbnails(_ photos: [PhotoRecord], poses: [ScanPhotoPose]) -> [UUID: UIImage] {
+        let posed = Set(poses.map(\.photoID))
+        var result: [UUID: UIImage] = [:]
+        for photo in photos where posed.contains(photo.id) {
+            if let data = photo.imageData, let image = ImageProcessing.thumbnail(from: data, maxPixel: 256) {
+                result[photo.id] = image
+            }
+        }
+        return result
+    }
+
     private func summary(_ placement: ScanCameraPlacement) -> String {
         [
             project.areaName(for: placement),
@@ -321,7 +451,7 @@ struct ScanEditorView: View {
         saveTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(700))
             guard !Task.isCancelled else { return }
-            onChange(name, note, placements)
+            onChange(edits)
         }
     }
 
@@ -329,7 +459,7 @@ struct ScanEditorView: View {
         guard didLoad, let saveTask else { return }
         saveTask.cancel()
         self.saveTask = nil
-        onChange(name, note, placements)
+        onChange(edits)
     }
 }
 

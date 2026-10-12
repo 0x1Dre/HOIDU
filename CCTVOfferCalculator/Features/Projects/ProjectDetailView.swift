@@ -301,13 +301,19 @@ struct ProjectDetailView: View {
                 viewModel.record.scans.append(scan)
                 save()
             },
-            onUpdate: { id, name, note, placements in
+            onUpdate: { id, edits in
                 guard let index = viewModel.record.scans.firstIndex(where: { $0.id == id }) else { return }
-                let current = viewModel.record.scans[index]
-                guard current.name != name || current.note != note || current.placements != placements else { return }
-                viewModel.record.scans[index].name = name
-                viewModel.record.scans[index].note = note
-                viewModel.record.scans[index].placements = placements
+                var scan = viewModel.record.scans[index]
+                let current = ScanEdits(name: scan.name, note: scan.note, placements: scan.placements,
+                                        photos: scan.photos, photoPoses: scan.photoPoses, areaID: scan.areaID)
+                guard current != edits else { return }
+                scan.name = edits.name
+                scan.note = edits.note
+                scan.placements = edits.placements
+                scan.photos = edits.photos
+                scan.photoPoses = edits.photoPoses
+                scan.areaID = edits.areaID
+                viewModel.record.scans[index] = scan
                 save()
             },
             onDelete: { id in

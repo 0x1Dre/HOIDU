@@ -153,9 +153,12 @@ public enum ProjectExchange {
         copy.id = UUID()
         copy.reference = project.reference + referenceSuffix
         var positionIDs: [UUID: UUID] = [:]
+        var areaIDs: [UUID: UUID] = [:]
         copy.areas = project.areas.map { area in
             var area = area
-            area.id = UUID()
+            let newAreaID = UUID()
+            areaIDs[area.id] = newAreaID
+            area.id = newAreaID
             area.photos = area.photos.map { var p = $0; p.id = UUID(); return p }
             area.positions = area.positions.map { position in
                 var position = position
@@ -171,6 +174,21 @@ public enum ProjectExchange {
         copy.scans = project.scans.map { scan in
             var scan = scan
             scan.id = UUID()
+            scan.areaID = scan.areaID.flatMap { areaIDs[$0] }
+            var photoIDs: [UUID: UUID] = [:]
+            scan.photos = scan.photos.map { photo in
+                var photo = photo
+                let newID = UUID()
+                photoIDs[photo.id] = newID
+                photo.id = newID
+                return photo
+            }
+            scan.photoPoses = scan.photoPoses.compactMap { pose in
+                guard let newID = photoIDs[pose.photoID] else { return nil }
+                var pose = pose
+                pose.photoID = newID
+                return pose
+            }
             scan.placements = scan.placements.map { placement in
                 var placement = placement
                 placement.id = UUID()

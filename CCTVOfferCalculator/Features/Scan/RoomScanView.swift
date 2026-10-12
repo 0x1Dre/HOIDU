@@ -119,7 +119,7 @@ struct RoomScanScreen: View {
 
     /// Wird erst beim Erscheinen erzeugt, damit SwiftUI keine überzähligen Scan-Ansichten anlegt.
     @State private var controller: RoomScanController?
-    @State private var pointCloud = ScanPointCloud()
+    @State private var captureData = ScanCaptureData()
     @State private var showPoints = true
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -133,7 +133,7 @@ struct RoomScanScreen: View {
                     .ignoresSafeArea()
 
                 if showPoints, controller.isScanning {
-                    PointCloudOverlay(session: controller.captureView.captureSession.arSession, cloud: pointCloud)
+                    PointCloudOverlay(session: controller.captureView.captureSession.arSession, cloud: captureData.cloud)
                         .ignoresSafeArea()
                 }
 
@@ -147,7 +147,7 @@ struct RoomScanScreen: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.controlRadius))
                         Spacer()
                         if controller.isScanning {
-                            PointCountBadge(cloud: pointCloud)
+                            PointCountBadge(cloud: captureData.cloud)
                             PointsToggle(isOn: $showPoints)
                         }
                     }
@@ -158,7 +158,7 @@ struct RoomScanScreen: View {
             }
 
             if isSaving {
-                ProgressView("Modell wird erstellt …")
+                ProgressView("Modell und Texturen werden erstellt …")
                     .padding(24)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             }
@@ -166,6 +166,7 @@ struct RoomScanScreen: View {
         .onAppear {
             if controller == nil { controller = RoomScanController() }
         }
+        .modifier(ScanFrameCollector(data: captureData, isActive: controller?.isScanning ?? false))
         .alert("Speichern fehlgeschlagen", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK") {}
         } message: {
@@ -186,8 +187,7 @@ struct RoomScanScreen: View {
                 }
                 .font(.brand(.subheadline))
                 Button {
-                    pointCloud.reset()
-                    controller.start()
+                    restart(controller)
                 } label: {
                     Label("Scan starten", systemImage: "record.circle")
                         .frame(maxWidth: .infinity)
@@ -218,8 +218,7 @@ struct RoomScanScreen: View {
         case .review(let room):
             HStack(spacing: 12) {
                 Button {
-                    pointCloud.reset()
-                    controller.start()
+                    restart(controller)
                 } label: {
                     Label("Neu", systemImage: "arrow.counterclockwise")
                         .frame(maxWidth: .infinity)
@@ -241,8 +240,7 @@ struct RoomScanScreen: View {
                     .font(.brand(.subheadline))
                     .multilineTextAlignment(.center)
                 Button {
-                    pointCloud.reset()
-                    controller.start()
+                    restart(controller)
                 } label: {
                     Label("Erneut scannen", systemImage: "arrow.counterclockwise")
                         .frame(maxWidth: .infinity)
@@ -254,13 +252,20 @@ struct RoomScanScreen: View {
         }
     }
 
+    private func restart(_ controller: RoomScanController) {
+        captureData.reset()
+        captureData.session = controller.captureView.captureSession.arSession
+        controller.start()
+    }
+
     private func save(_ room: CapturedRoom) {
         isSaving = true
+        let keyframes = captureData.keyframes.keyframes
         Task { @MainActor in
             // Kurz warten, damit die Fortschrittsanzeige erscheint.
             try? await Task.sleep(for: .milliseconds(80))
             do {
-                let record = try RoomModelBuilder.record(from: room)
+                let record = try await RoomModelBuilder.record(from: room, keyframes: keyframes)
                 isSaving = false
                 onComplete(record)
             } catch {
@@ -275,22 +280,76 @@ struct RoomScanScreen: View {
 
 @MainActor
 enum RoomModelBuilder {
-    static func record(from room: CapturedRoom) throws -> SiteScanRecord {
+    /// Texturen je Fläche (Wand, Tür, Fenster, Boden), berechnet aus den Aufnahmen des Scans.
+    struct RoomTextures: Sendable {
+        var surfaces: [UUID: RGBAImage] = [:]
+    }
+
+    static func record(from room: CapturedRoom, keyframes: [ScanKeyframe]) async throws -> SiteScanRecord {
         guard !room.walls.isEmpty else { throw ScanError.emptyScan }
-        let scene = makeScene(room)
+        let textures = await Task.detached(priority: .userInitiated) {
+            computeTextures(room: room, keyframes: keyframes)
+        }.value
+        let scene = makeScene(room, textures: textures)
         let data = try ScanModelFile.data(from: scene)
-        return SiteScanRecord(kind: .raum, modelData: data, floorPlan: makeFloorPlan(room))
+        let photos = ScanTexturing.photos(from: keyframes)
+        return SiteScanRecord(kind: .raum, modelData: data, floorPlan: makeFloorPlan(room),
+                              photos: photos.photos, photoPoses: photos.poses)
+    }
+
+    nonisolated static func computeTextures(room: CapturedRoom, keyframes: [ScanKeyframe]) -> RoomTextures {
+        guard !keyframes.isEmpty else { return RoomTextures() }
+        let sampler = KeyframeSampler(keyframes: keyframes)
+        var result = RoomTextures()
+        for surface in room.walls + room.doors + room.windows {
+            let w = surface.dimensions.x / 2, h = surface.dimensions.y / 2
+            result.surfaces[surface.identifier] = ScanTexturing.surfaceTexture(
+                transform: surface.transform, minX: -w, maxX: w, minY: -h, maxY: h, sampler: sampler
+            )
+        }
+        for floor in room.floors {
+            let polygon = floorOutline(floor)
+            guard let first = polygon.first else { continue }
+            var minX = first.x, maxX = first.x, minY = first.y, maxY = first.y
+            for p in polygon {
+                minX = min(minX, p.x); maxX = max(maxX, p.x)
+                minY = min(minY, p.y); maxY = max(maxY, p.y)
+            }
+            result.surfaces[floor.identifier] = ScanTexturing.surfaceTexture(
+                transform: floor.transform, minX: minX, maxX: maxX, minY: minY, maxY: maxY,
+                polygon: polygon, pixelsPerMeter: 50, sampler: sampler
+            )
+        }
+        return result
+    }
+
+    /// Bodenumriss in der lokalen Ebene des Bodens.
+    nonisolated private static func floorOutline(_ floor: CapturedRoom.Surface) -> [SIMD2<Float>] {
+        if floor.polygonCorners.count >= 3 {
+            return floor.polygonCorners.map { SIMD2($0.x, $0.y) }
+        }
+        let dx = floor.dimensions.x / 2, dy = floor.dimensions.y / 2
+        return [SIMD2(-dx, -dy), SIMD2(dx, -dy), SIMD2(dx, dy), SIMD2(-dx, dy)]
     }
 
     // MARK: 3D
 
-    static func makeScene(_ room: CapturedRoom) -> SCNScene {
+    static func makeScene(_ room: CapturedRoom, textures: RoomTextures = RoomTextures()) -> SCNScene {
         let scene = SCNScene()
         let root = scene.rootNode
 
         for floor in room.floors {
             let node: SCNNode
-            if floor.polygonCorners.count >= 3 {
+            if let texture = textures.surfaces[floor.identifier], let image = texture.makeImage() {
+                // Rechteck um den Umriss; ausserhalb des Umrisses ist die Textur transparent.
+                let polygon = floorOutline(floor)
+                let xs = polygon.map(\.x), ys = polygon.map(\.y)
+                let minX = xs.min() ?? 0, maxX = xs.max() ?? 0, minY = ys.min() ?? 0, maxY = ys.max() ?? 0
+                let plane = SCNPlane(width: CGFloat(maxX - minX), height: CGFloat(maxY - minY))
+                plane.materials = [texturedMaterial(image)]
+                node = SCNNode(geometry: plane)
+                node.simdTransform = floor.transform * translation((minX + maxX) / 2, (minY + maxY) / 2, 0)
+            } else if floor.polygonCorners.count >= 3 {
                 let path = UIBezierPath()
                 path.move(to: CGPoint(x: CGFloat(floor.polygonCorners[0].x), y: CGFloat(floor.polygonCorners[0].y)))
                 for corner in floor.polygonCorners.dropFirst() {
@@ -298,22 +357,24 @@ enum RoomModelBuilder {
                 }
                 path.close()
                 node = SCNNode(geometry: SCNShape(path: path, extrusionDepth: 0.02))
+                node.geometry?.materials = [material(OstsichtColor.kalk)]
+                node.simdTransform = floor.transform
             } else {
                 node = SCNNode(geometry: SCNBox(width: CGFloat(floor.dimensions.x), height: CGFloat(floor.dimensions.y), length: 0.02, chamferRadius: 0))
+                node.geometry?.materials = [material(OstsichtColor.kalk)]
+                node.simdTransform = floor.transform
             }
-            node.geometry?.materials = [material(OstsichtColor.kalk)]
-            node.simdTransform = floor.transform
             root.addChildNode(node)
         }
 
         for wall in room.walls {
-            root.addChildNode(box(wall.dimensions.x, wall.dimensions.y, 0.1, transform: wall.transform, color: UIColor(hex: 0xEFECE4)))
+            root.addChildNode(surfaceBox(wall, length: 0.1, color: UIColor(hex: 0xEFECE4), textures: textures))
         }
         for door in room.doors {
-            root.addChildNode(box(door.dimensions.x, door.dimensions.y, 0.14, transform: door.transform, color: OstsichtColor.gruen.withAlphaComponent(0.75)))
+            root.addChildNode(surfaceBox(door, length: 0.14, color: OstsichtColor.gruen.withAlphaComponent(0.75), textures: textures))
         }
         for window in room.windows {
-            root.addChildNode(box(window.dimensions.x, window.dimensions.y, 0.14, transform: window.transform, color: UIColor(hex: 0xA9C7D8).withAlphaComponent(0.7)))
+            root.addChildNode(surfaceBox(window, length: 0.14, color: UIColor(hex: 0xA9C7D8).withAlphaComponent(0.7), textures: textures))
         }
         for object in room.objects {
             root.addChildNode(box(object.dimensions.x, object.dimensions.y, object.dimensions.z, transform: object.transform, color: UIColor(hex: 0xCFCBBF)))
@@ -321,6 +382,25 @@ enum RoomModelBuilder {
 
         root.enumerateHierarchy { node, _ in node.categoryBitMask = ScanModelFile.modelCategory }
         return scene
+    }
+
+    /// Wand, Tür oder Fenster als Quader; mit Textur auf Vorder- und (gespiegelt) Rückseite.
+    private static func surfaceBox(_ surface: CapturedRoom.Surface, length: Float, color: UIColor, textures: RoomTextures) -> SCNNode {
+        let node = box(surface.dimensions.x, surface.dimensions.y, length, transform: surface.transform, color: color)
+        if let texture = textures.surfaces[surface.identifier],
+           let front = texture.makeImage(),
+           let back = texture.mirrored().makeImage() {
+            let side = material(UIColor(hex: 0xE6E3DA))
+            // Reihenfolge bei SCNBox: vorne, rechts, hinten, links, oben, unten
+            node.geometry?.materials = [texturedMaterial(front), side, texturedMaterial(back), side, side, side]
+        }
+        return node
+    }
+
+    private static func translation(_ x: Float, _ y: Float, _ z: Float) -> simd_float4x4 {
+        var matrix = matrix_identity_float4x4
+        matrix.columns.3 = SIMD4(x, y, z, 1)
+        return matrix
     }
 
     private static func box(_ width: Float, _ height: Float, _ length: Float, transform: simd_float4x4, color: UIColor) -> SCNNode {
@@ -335,6 +415,16 @@ enum RoomModelBuilder {
         let material = SCNMaterial()
         material.diffuse.contents = color
         material.lightingModel = .lambert
+        material.isDoubleSided = true
+        return material
+    }
+
+    /// Foto-Textur ohne zusätzliche Beleuchtung, damit sie wie aufgenommen aussieht.
+    private static func texturedMaterial(_ image: UIImage) -> SCNMaterial {
+        let material = SCNMaterial()
+        material.diffuse.contents = image
+        material.diffuse.mipFilter = .linear
+        material.lightingModel = .constant
         material.isDoubleSided = true
         return material
     }

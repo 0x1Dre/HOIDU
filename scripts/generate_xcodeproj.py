@@ -236,7 +236,7 @@ def main():
         "MTL_ENABLE_DEBUG_INFO": "INCLUDE_SOURCE",
         "ONLY_ACTIVE_ARCH": "YES",
         "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "DEBUG $(inherited)",
-        "SWIFT_OPTIMIZATION_LEVEL": "-Onone",
+        "SWIFT_OPTIMIZATION_LEVEL": "-O",  # Scan-Texturen sind ohne Optimierung sehr langsam
     })
     release_project = dict(common_project, **{
         "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",

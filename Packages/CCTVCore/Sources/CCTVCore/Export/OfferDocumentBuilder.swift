@@ -40,7 +40,7 @@ public enum OfferDocumentBuilder {
         if let positions = positionsSection(project, audience: options.audience, includeCustomerPhotos: options.includePhotosInCustomerPDF) {
             sections.append(positions)
         }
-        if let floorPlans = floorPlanSection(project) {
+        if let floorPlans = floorPlanSection(project, audience: options.audience, includeCustomerPhotos: options.includePhotosInCustomerPDF) {
             sections.append(floorPlans)
         }
         if let hints = hintsSection(analysis, isInternal: isInternal) {
@@ -315,11 +315,24 @@ public enum OfferDocumentBuilder {
     }
 
     /// Grundrisse aus den 3D-Scans mit nummerierten Kameras und Blickfeldern.
-    static func floorPlanSection(_ project: ProjectRecord) -> DocumentSection? {
+    static func floorPlanSection(_ project: ProjectRecord, audience: DocumentAudience = .internal, includeCustomerPhotos: Bool = true) -> DocumentSection? {
+        let showPhotos = audience == .internal || includeCustomerPhotos
         var blocks: [DocumentBlock] = []
         var number = 0
         for scan in project.scans {
-            guard let plan = scan.floorPlan, !plan.imageData.isEmpty else { continue }
+            let scanPhotos: [DocumentPhoto] = showPhotos ? scan.photos.compactMap { photo in
+                guard let data = photo.imageData, !data.isEmpty else { return nil }
+                if audience == .customer && !photo.includeInCustomerPDF { return nil }
+                let title = photo.caption.trimmingCharacters(in: .whitespaces).isEmpty ? scan.displayName : photo.caption
+                return DocumentPhoto(id: photo.id, title: title, details: photo.note.isEmpty ? [] : [photo.note], imageData: data, markers: photo.markers)
+            } : []
+            guard let plan = scan.floorPlan, !plan.imageData.isEmpty else {
+                if !scanPhotos.isEmpty {
+                    blocks.append(.paragraph("Fotos «\(scan.displayName)»"))
+                    blocks.append(.photos(scanPhotos))
+                }
+                continue
+            }
             var markers: [DocumentFloorPlanMarker] = []
             var rows: [[String]] = []
             for placement in scan.placements {
@@ -335,6 +348,7 @@ public enum OfferDocumentBuilder {
                 ])
             }
             var details = ["\(scan.kind.label) · aufgenommen am \(Format.date(scan.createdAt))"]
+            if let area = project.areaName(for: scan) { details.append("Bereich \(area)") }
             details.append("Ausschnitt ca. \(Format.number(plan.bounds.width, fractionDigits: 1)) × \(Format.number(plan.bounds.depth, fractionDigits: 1)) m")
             if !scan.note.isEmpty { details.append(scan.note) }
             blocks.append(.floorPlan(DocumentFloorPlan(
@@ -356,6 +370,9 @@ public enum OfferDocumentBuilder {
                     ],
                     rows: rows
                 )))
+            }
+            if !scanPhotos.isEmpty {
+                blocks.append(.photos(scanPhotos))
             }
         }
         guard !blocks.isEmpty else { return nil }

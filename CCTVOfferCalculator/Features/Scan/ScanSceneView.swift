@@ -11,8 +11,11 @@ struct ScanSceneView: UIViewRepresentable {
     var numbers: [UUID: Int]
     var selectedID: UUID?
     var isPlacing: Bool
+    var photoPoses: [ScanPhotoPose] = []
+    var photoThumbnails: [UUID: UIImage] = [:]
     var onPlace: (_ point: SIMD3<Float>, _ normal: SIMD3<Float>) -> Void
     var onSelect: (UUID?) -> Void
+    var onSelectPhoto: (UUID) -> Void = { _ in }
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
 
@@ -30,6 +33,10 @@ struct ScanSceneView: UIViewRepresentable {
         markerRoot.name = "markers"
         scene.rootNode.addChildNode(markerRoot)
         context.coordinator.markerRoot = markerRoot
+        let photoRoot = SCNNode()
+        photoRoot.name = "photos"
+        scene.rootNode.addChildNode(photoRoot)
+        context.coordinator.photoRoot = photoRoot
 
         let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
         view.addGestureRecognizer(tap)
@@ -47,13 +54,16 @@ struct ScanSceneView: UIViewRepresentable {
     func updateUIView(_ view: SCNView, context: Context) {
         context.coordinator.parent = self
         context.coordinator.syncMarkers()
+        context.coordinator.syncPhotos()
     }
 
     @MainActor
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
         var parent: ScanSceneView
         var markerRoot: SCNNode?
+        var photoRoot: SCNNode?
         private var lastSignature: Int?
+        private var lastPhotoSignature: Int?
         /// Berechnete Sichtbarkeit je Kamera; nur geänderte Kameras werden neu berechnet.
         private var visibilityCache: [ScanVisibility.Key: ScanVisibility.Geometry] = [:]
 
@@ -106,6 +116,21 @@ struct ScanSceneView: UIViewRepresentable {
             visibilityCache = visibilityCache.filter { usedKeys.contains($0.key) }
         }
 
+        func syncPhotos() {
+            guard let photoRoot else { return }
+            var hasher = Hasher()
+            hasher.combine(parent.photoPoses)
+            hasher.combine(parent.photoThumbnails.keys.sorted { $0.uuidString < $1.uuidString })
+            let signature = hasher.finalize()
+            guard signature != lastPhotoSignature else { return }
+            lastPhotoSignature = signature
+
+            photoRoot.childNodes.forEach { $0.removeFromParentNode() }
+            for pose in parent.photoPoses {
+                photoRoot.addChildNode(PhotoMarkerNode.make(for: pose, image: parent.photoThumbnails[pose.photoID]))
+            }
+        }
+
         /// Verschiebt Kamera und Drehpunkt gemeinsam in der Bildebene.
         @objc func handlePan(_ gesture: UIPanGestureRecognizer) {
             guard let view = gesture.view as? SCNView, let pointOfView = view.pointOfView else { return }
@@ -144,6 +169,17 @@ struct ScanSceneView: UIViewRepresentable {
                 return
             }
 
+            if !parent.isPlacing {
+                let photoHits = view.hitTest(location, options: [
+                    .categoryBitMask: ScanModelFile.photoCategory,
+                    .searchMode: SCNHitTestSearchMode.closest.rawValue
+                ])
+                if let node = photoHits.first?.node, let id = PhotoMarkerNode.photoID(of: node) {
+                    parent.onSelectPhoto(id)
+                    return
+                }
+            }
+
             guard parent.isPlacing else {
                 parent.onSelect(nil)
                 return
@@ -158,6 +194,64 @@ struct ScanSceneView: UIViewRepresentable {
             let normal = SIMD3<Float>(hit.worldNormal)
             parent.onPlace(point, normal)
         }
+    }
+}
+
+/// Foto-Aufnahme im 3D-Modell: kleines Vorschaubild am Aufnahmeort, in Blickrichtung ausgerichtet.
+@MainActor
+enum PhotoMarkerNode {
+    private static let prefix = "photo:"
+
+    static func photoID(of node: SCNNode) -> UUID? {
+        var current: SCNNode? = node
+        while let candidate = current {
+            if let name = candidate.name, name.hasPrefix(prefix) {
+                return UUID(uuidString: String(name.dropFirst(prefix.count)))
+            }
+            current = candidate.parent
+        }
+        return nil
+    }
+
+    static func make(for pose: ScanPhotoPose, image: UIImage?) -> SCNNode {
+        let root = SCNNode()
+        root.name = prefix + pose.photoID.uuidString
+        root.position = SCNVector3(Float(pose.x), Float(pose.y), Float(pose.z))
+        let yawNode = SCNNode()
+        yawNode.eulerAngles.y = Float(-pose.yawDegrees * .pi / 180)
+        root.addChildNode(yawNode)
+        let pitchNode = SCNNode()
+        pitchNode.eulerAngles.x = Float(-pose.pitchDegrees * .pi / 180)
+        yawNode.addChildNode(pitchNode)
+
+        let aspect = image.map { $0.size.width / max($0.size.height, 1) } ?? (4.0 / 3.0)
+        let height: CGFloat = 0.2
+        let width = height * aspect
+
+        // Rahmen
+        let frame = SCNPlane(width: width + 0.02, height: height + 0.02)
+        let frameMaterial = SCNMaterial()
+        frameMaterial.diffuse.contents = UIColor.white
+        frameMaterial.lightingModel = .constant
+        frameMaterial.isDoubleSided = true
+        frame.materials = [frameMaterial]
+        let frameNode = SCNNode(geometry: frame)
+        frameNode.position = SCNVector3(0, 0, -0.151)
+        pitchNode.addChildNode(frameNode)
+
+        // Bild
+        let plane = SCNPlane(width: width, height: height)
+        let material = SCNMaterial()
+        material.diffuse.contents = image ?? OstsichtColor.grau
+        material.lightingModel = .constant
+        material.isDoubleSided = true
+        plane.materials = [material]
+        let imageNode = SCNNode(geometry: plane)
+        imageNode.position = SCNVector3(0, 0, -0.15)
+        pitchNode.addChildNode(imageNode)
+
+        root.enumerateHierarchy { node, _ in node.categoryBitMask = ScanModelFile.photoCategory }
+        return root
     }
 }
 

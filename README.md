@@ -168,6 +168,9 @@ Im Projekt gibt es den Reiter **3D**. Damit lassen sich Räume und Umgebung mit 
 - **Kamera setzen:** In der 3D-Ansicht auf die Wand tippen. Die Kamera schaut automatisch von der Wand weg. Blickrichtung, Neigung, Öffnungswinkel, Reichweite und Höhe sind einstellbar.
 - **Verknüpfung:** Jede platzierte Kamera kann mit einer Kameraposition aus den Überwachungsbereichen verknüpft werden; beim Setzen wird die nächste freie Position vorgeschlagen.
 - **Grundriss:** Beim Scannen entsteht eine Draufsicht. Kameras erscheinen darauf nummeriert mit Blickfeld – in der App und im Abschnitt «Grundriss und Kamerastandorte» der Kunden- und der internen Offerte.
+- **Live-Punkte:** Beim Scannen zeigt ein grünes Punkteraster (aus der LiDAR-Tiefe) und ein Zähler, was schon erfasst ist.
+- **Texturen:** Während des Scans werden bis zu 40 Aufnahmen mit Kameraposition gespeichert. Daraus werden Wände, Boden, Türen und Fenster (Raum) bzw. das Dreiecksnetz (Umgebung) eingefärbt; verdeckte Stellen werden über die Tiefe erkannt.
+- **Fotos:** Bis zu 8 gut verteilte Aufnahmen werden als Fotos zum Scan übernommen und im 3D-Modell an ihrem Standort angezeigt. Eigene Fotos lassen sich ergänzen; der Scan kann einem Überwachungsbereich zugeordnet werden (Reiter «Fotos»). Fotos erscheinen im PDF beim Grundriss.
 - **Speicherung:** Modell (`.scn`) und Grundriss liegen lokal in der Datenbank (`externalStorage`). Der JSON-Export ohne Fotos enthält nur die Platzierungen; das Vollbackup enthält alles.
 
 ## Gestaltung (Ostsicht CI/CD)
@@ -204,5 +207,5 @@ Die mitgelieferten Preislisten enthalten **Beispielpreise in CHF exkl. MWST** f�
 
 ## Bekannte Einschränkungen
 
-- Die Bundle Identifier ist ein Platzhalter und muss für die Signierung angepasst werden.
+- Die Debug-Konfiguration kompiliert mit `-O`, damit die Texturberechnung beim Testen nicht minutenlang dauert. Zum schrittweisen Debuggen bei Bedarf in den Build Settings auf `-Onone` stellen.
 - Das Ostsicht-Design wurde ohne Xcode umgesetzt (keine Kompilierung in der Entwicklungsumgebung). Falls beim Build Fehler auftreten, bitte zurückmelden.

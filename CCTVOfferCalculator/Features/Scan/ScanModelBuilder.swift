@@ -14,6 +14,8 @@ enum ScanModelFile {
     static let modelCategory = 1
     /// Kategorie für platzierte Kameras.
     static let markerCategory = 2
+    /// Kategorie für Foto-Aufnahmen im Modell.
+    static let photoCategory = 4
 
     static func data(from scene: SCNScene) throws -> Data {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("scan-\(UUID().uuidString).scn")
@@ -95,6 +97,8 @@ struct WorldMesh {
     var vertices: [SIMD3<Float>] = []
     var normals: [SIMD3<Float>] = []
     var indices: [UInt32] = []
+    /// Farbe je Vertex (0…1) aus den Aufnahmen; leer = einfarbig.
+    var colors: [SIMD4<Float>] = []
 
     var isEmpty: Bool { indices.isEmpty }
 
@@ -105,10 +109,22 @@ struct WorldMesh {
         let vertexSource = SCNGeometrySource(vertices: vertices.map { SCNVector3($0.x, $0.y, $0.z) })
         let normalSource = SCNGeometrySource(normals: normals.map { SCNVector3($0.x, $0.y, $0.z) })
         let element = SCNGeometryElement(indices: indices, primitiveType: .triangles)
-        let geometry = SCNGeometry(sources: [vertexSource, normalSource], elements: [element])
+        var sources = [vertexSource, normalSource]
+        let hasColors = colors.count == vertices.count
+        if hasColors {
+            let data = colors.withUnsafeBufferPointer { Data(buffer: $0) }
+            sources.append(SCNGeometrySource(
+                data: data, semantic: .color, vectorCount: colors.count,
+                usesFloatComponents: true, componentsPerVector: 4,
+                bytesPerComponent: MemoryLayout<Float>.size, dataOffset: 0,
+                dataStride: MemoryLayout<SIMD4<Float>>.stride
+            ))
+        }
+        let geometry = SCNGeometry(sources: sources, elements: [element])
         let material = SCNMaterial()
-        material.diffuse.contents = UIColor(hex: 0xD9D6CC)
-        material.lightingModel = .lambert
+        // Mit Farben: weiss und unbeleuchtet, damit die Aufnahmefarben unverfälscht erscheinen.
+        material.diffuse.contents = hasColors ? UIColor.white : UIColor(hex: 0xD9D6CC)
+        material.lightingModel = hasColors ? .constant : .lambert
         material.isDoubleSided = true
         geometry.materials = [material]
         let node = SCNNode(geometry: geometry)
