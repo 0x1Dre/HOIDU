@@ -60,7 +60,7 @@ struct PhotoGalleryEditor: View {
                 Button {
                     cameraTrigger = true
                 } label: {
-                    ActionLabel(title: "Foto aufnehmen", systemImage: "camera.fill", prominent: true)
+                    ActionLabel(title: "Aufnehmen", systemImage: "camera.fill", prominent: true)
                 }
                 .buttonStyle(.borderless)
                 .accessibilityHint(CameraAccess.isCameraAvailable ? "Öffnet die Kamera" : "Keine Kamera verfügbar, bitte Mediathek verwenden")

@@ -123,7 +123,7 @@ struct ExportPanel: View {
         Button {
             exportJSON()
         } label: {
-            Label("Projekt (JSON)", systemImage: "curlybraces")
+            Label("JSON", systemImage: "curlybraces")
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.secondaryAction)

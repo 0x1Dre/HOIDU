@@ -59,7 +59,7 @@ struct PhotoMarkupView: View {
                 Button {
                     _ = markers.popLast()
                 } label: {
-                    Label("Letzte entfernen", systemImage: "arrow.uturn.backward")
+                    Label("Rückgängig", systemImage: "arrow.uturn.backward")
                 }
                 .buttonStyle(.secondaryAction)
                 .disabled(markers.isEmpty)
@@ -67,7 +67,8 @@ struct PhotoMarkupView: View {
                 Button(role: .destructive) {
                     markers.removeAll()
                 } label: {
-                    Label("Alle entfernen", systemImage: "trash")
+                    Label("Alle", systemImage: "trash")
+                        .accessibilityLabel("Alle Markierungen entfernen")
                 }
                 .buttonStyle(.secondaryAction)
                 .disabled(markers.isEmpty)

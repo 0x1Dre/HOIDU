@@ -237,6 +237,8 @@ struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.brand(.headline))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
             .foregroundStyle(.white)
             .frame(minHeight: Theme.minimumTouchTarget)
             .padding(.horizontal, 20)
@@ -253,6 +255,8 @@ struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.brand(.headline))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
             .foregroundStyle(Theme.gruen)
             .frame(minHeight: Theme.minimumTouchTarget)
             .padding(.horizontal, 20)
@@ -275,6 +279,8 @@ struct ActionLabel: View {
     var body: some View {
         Label(title, systemImage: systemImage)
             .font(.brand(.headline))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
             .foregroundStyle(prominent ? Color.white : Theme.gruen)
             .frame(maxWidth: .infinity, minHeight: Theme.minimumTouchTarget)
             .padding(.horizontal, 12)

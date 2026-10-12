@@ -84,7 +84,7 @@ struct AreasStepView: View {
                 Button {
                     editing = AreaEditing(area: SiteAreaRecord(), isNew: true)
                 } label: {
-                    ActionLabel(title: "Bereich hinzufügen", systemImage: "plus.circle.fill")
+                    ActionLabel(title: "Neuer Bereich", systemImage: "plus.circle.fill")
                 }
                 .buttonStyle(.borderless)
                 .listRowBackground(Color.clear)
@@ -101,7 +101,7 @@ struct AreasStepView: View {
                         }
                     }
                 } label: {
-                    ActionLabel(title: "Aus Vorlage hinzufügen", systemImage: "square.grid.2x2", prominent: false)
+                    ActionLabel(title: "Aus Vorlage", systemImage: "square.grid.2x2", prominent: false)
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))

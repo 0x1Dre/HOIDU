@@ -74,9 +74,12 @@ struct ProjectWizardView: View {
                 .buttonStyle(.secondaryAction)
             }
             Spacer()
-            Text("Schritt \(viewModel.step.rawValue) von \(WizardStep.allCases.count)")
-                .font(.brand(.subheadline))
+            Text("\(viewModel.step.rawValue)/\(WizardStep.allCases.count)")
+                .font(.brand(.subheadline).monospacedDigit())
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .fixedSize()
+                .accessibilityLabel("Schritt \(viewModel.step.rawValue) von \(WizardStep.allCases.count)")
             Spacer()
             if viewModel.isLastStep {
                 Button {
@@ -84,7 +87,7 @@ struct ProjectWizardView: View {
                         onSave(record)
                     }
                 } label: {
-                    Label("Projekt speichern", systemImage: "checkmark.circle.fill")
+                    Label("Speichern", systemImage: "checkmark.circle.fill")
                 }
                 .buttonStyle(.primaryAction)
             } else {

@@ -92,7 +92,7 @@ struct AreaEditorView: View {
                     Button {
                         addPosition()
                     } label: {
-                        ActionLabel(title: "Kameraposition hinzufügen", systemImage: "mappin.and.ellipse")
+                        ActionLabel(title: "Neue Position", systemImage: "mappin.and.ellipse")
                     }
                     .buttonStyle(.borderless)
                     if let quantityNotice {
