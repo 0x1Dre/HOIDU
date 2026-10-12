@@ -182,7 +182,8 @@ struct ProjectDetailView: View {
         TechnicalRecommendationCard(lines: analysis.technicalRecommendation)
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 16)], spacing: 16) {
             ForEach(analysis.scores) { score in
-                ScoreCardView(score: score, isRecommended: analysis.recommendedVariant?.manufacturer == score.manufacturer)
+                ScoreCardView(score: score, isRecommended: analysis.recommendedVariant?.manufacturer == score.manufacturer,
+                              project: viewModel?.record)
             }
         }
         WarningsCard(warnings: analysis.warnings)
@@ -253,7 +254,7 @@ struct ProjectDetailView: View {
         ComparisonTableView(analysis: analysis, internalMode: settings.internalMode)
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 16)], spacing: 16) {
             ForEach(analysis.scores) { score in
-                ScoreCardView(score: score)
+                ScoreCardView(score: score, project: viewModel?.record)
             }
         }
     }

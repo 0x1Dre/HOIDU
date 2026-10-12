@@ -25,8 +25,35 @@ struct TechnicalRecommendationCard: View {
 struct ScoreCardView: View {
     let score: ManufacturerScore
     var isRecommended = false
+    /// Mit Projekt wird die Karte antippbar und zeigt die ausführliche Erklärung.
+    var project: ProjectRecord?
+
+    @State private var showDetail = false
 
     var body: some View {
+        if let project {
+            Button {
+                showDetail = true
+            } label: {
+                card(detailHint: true)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Zeigt Begründung und Abgleich mit den Anforderungen")
+            .sheet(isPresented: $showDetail) {
+                ManufacturerDetailView(score: score, project: project, isRecommended: isRecommended)
+            }
+        } else {
+            card(detailHint: false)
+        }
+    }
+
+    /// Anzahl Wünsche, die dieser Hersteller nicht umsetzen kann.
+    private var impossibleCount: Int {
+        guard let project else { return 0 }
+        return RequirementMatcher.checks(for: score.manufacturer, project: project).filter { $0.status == .nichtMoeglich }.count
+    }
+
+    private func card(detailHint: Bool) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
@@ -63,8 +90,23 @@ struct ScoreCardView: View {
                     .font(.brand(.footnote).weight(.semibold))
                     .foregroundStyle(Theme.gruen)
             }
+            if detailHint {
+                HStack {
+                    if impossibleCount > 0 {
+                        Label(impossibleCount == 1 ? "1 Wunsch nicht umsetzbar" : "\(impossibleCount) Wünsche nicht umsetzbar",
+                              systemImage: "xmark.octagon.fill")
+                            .foregroundStyle(Theme.error)
+                    }
+                    Spacer()
+                    Text("Details")
+                    Image(systemName: "chevron.right")
+                }
+                .font(.brand(.footnote).weight(.semibold))
+                .foregroundStyle(Theme.gruen)
+            }
         }
         .card()
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
 }

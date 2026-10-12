@@ -83,7 +83,8 @@ struct RecommendationStepView: View {
         SectionHeader(title: "Herstellerbewertung", subtitle: "0–100 Punkte anhand der erfassten Anforderungen", systemImage: "chart.bar")
         LazyVGrid(columns: columns, spacing: 16) {
             ForEach(analysis.scores) { score in
-                ScoreCardView(score: score, isRecommended: analysis.recommendedVariant?.manufacturer == score.manufacturer)
+                ScoreCardView(score: score, isRecommended: analysis.recommendedVariant?.manufacturer == score.manufacturer,
+                              project: viewModel.draft)
             }
         }
 
