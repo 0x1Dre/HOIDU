@@ -90,6 +90,9 @@ public struct ScanCameraPlacement: Codable, Hashable, Sendable, Identifiable {
     public var fieldOfViewDegrees: Double
     /// Nutzbare Reichweite in Metern (Darstellung des Blickfelds).
     public var rangeMeters: Double
+    /// Sichtweite im Grundriss bis zur nächsten Wand, gleichmässig über den Öffnungswinkel
+    /// von links nach rechts verteilt (Meter). Leer, solange nicht berechnet.
+    public var planReach: [Double]
 
     public init(
         id: UUID = UUID(),
@@ -101,7 +104,8 @@ public struct ScanCameraPlacement: Codable, Hashable, Sendable, Identifiable {
         yawDegrees: Double = 0,
         tiltDegrees: Double = ScanCameraPlacement.defaultTilt,
         fieldOfViewDegrees: Double = ScanCameraPlacement.defaultFieldOfView,
-        rangeMeters: Double = ScanCameraPlacement.defaultRange
+        rangeMeters: Double = ScanCameraPlacement.defaultRange,
+        planReach: [Double] = []
     ) {
         self.id = id
         self.positionID = positionID
@@ -113,6 +117,13 @@ public struct ScanCameraPlacement: Codable, Hashable, Sendable, Identifiable {
         self.tiltDegrees = min(90, max(0, tiltDegrees.isFinite ? tiltDegrees : ScanCameraPlacement.defaultTilt))
         self.fieldOfViewDegrees = min(180, max(10, fieldOfViewDegrees.isFinite ? fieldOfViewDegrees : ScanCameraPlacement.defaultFieldOfView))
         self.rangeMeters = min(100, max(1, rangeMeters.isFinite ? rangeMeters : ScanCameraPlacement.defaultRange))
+        self.planReach = planReach.map { $0.isFinite ? max(0, $0) : 0 }
+    }
+
+    /// Sichtweite für jede Blickrichtung im Grundriss, begrenzt durch die Reichweite.
+    /// Ohne berechnete Werte gilt überall die volle Reichweite.
+    public var effectivePlanReach: [Double] {
+        planReach.count >= 2 ? planReach.map { min($0, rangeMeters) } : []
     }
 
     /// Winkel auf 0…<360 Grad bringen.
@@ -144,7 +155,7 @@ public struct ScanCameraPlacement: Codable, Hashable, Sendable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, positionID, label, x, y, z, yawDegrees, tiltDegrees, fieldOfViewDegrees, rangeMeters
+        case id, positionID, label, x, y, z, yawDegrees, tiltDegrees, fieldOfViewDegrees, rangeMeters, planReach
     }
 
     public init(from decoder: Decoder) throws {
@@ -159,7 +170,8 @@ public struct ScanCameraPlacement: Codable, Hashable, Sendable, Identifiable {
             yawDegrees: try c.decodeIfPresent(Double.self, forKey: .yawDegrees) ?? 0,
             tiltDegrees: try c.decodeIfPresent(Double.self, forKey: .tiltDegrees) ?? ScanCameraPlacement.defaultTilt,
             fieldOfViewDegrees: try c.decodeIfPresent(Double.self, forKey: .fieldOfViewDegrees) ?? ScanCameraPlacement.defaultFieldOfView,
-            rangeMeters: try c.decodeIfPresent(Double.self, forKey: .rangeMeters) ?? ScanCameraPlacement.defaultRange
+            rangeMeters: try c.decodeIfPresent(Double.self, forKey: .rangeMeters) ?? ScanCameraPlacement.defaultRange,
+            planReach: try c.decodeIfPresent([Double].self, forKey: .planReach) ?? []
         )
     }
 }

@@ -46,7 +46,16 @@ enum FloorPlanDrawing {
             let half = min(marker.fieldOfViewDegrees, 359) / 2 * .pi / 180
             let wedge = CGMutablePath()
             wedge.move(to: center)
-            wedge.addArc(center: center, radius: radius, startAngle: heading - half, endAngle: heading + half, clockwise: false)
+            if marker.reach.count >= 2 {
+                // Blickfeld endet an den Wänden: Sichtweite je Richtung aus dem 3D-Modell.
+                for (index, distance) in marker.reach.enumerated() {
+                    let angle = heading - half + 2 * half * Double(index) / Double(marker.reach.count - 1)
+                    let length = CGFloat(distance) * metersToPoints
+                    wedge.addLine(to: CGPoint(x: center.x + cos(angle) * length, y: center.y + sin(angle) * length))
+                }
+            } else {
+                wedge.addArc(center: center, radius: radius, startAngle: heading - half, endAngle: heading + half, clockwise: false)
+            }
             wedge.closeSubpath()
             let isHighlighted = highlighted == marker.number
             cg.addPath(wedge)

@@ -132,7 +132,12 @@ struct ScanEditorView: View {
                 return
             }
             do {
-                scene = try ScanModelFile.scene(from: data)
+                let loaded = try ScanModelFile.scene(from: data)
+                scene = loaded
+                // Sichtweite für Kameras nachrechnen, die noch keine haben (z. B. aus älteren Versionen).
+                if placements.contains(where: { $0.planReach.isEmpty }) {
+                    placements = placements.map { $0.planReach.isEmpty ? withReach($0, in: loaded) : $0 }
+                }
             } catch {
                 loadError = "Das 3D-Modell konnte nicht geladen werden."
                 mode = .plan
@@ -267,9 +272,13 @@ struct ScanEditorView: View {
         Binding(
             get: { placements.first { $0.id == id } ?? ScanCameraPlacement(x: 0, y: 0, z: 0) },
             set: { updated in
-                if let index = placements.firstIndex(where: { $0.id == id }) {
-                    placements[index] = updated
+                guard let index = placements.firstIndex(where: { $0.id == id }) else { return }
+                var updated = updated
+                // Sichtweite nur neu berechnen, wenn sich Lage oder Blickfeld geändert hat.
+                if ScanVisibility.Key(updated) != ScanVisibility.Key(placements[index]), let scene {
+                    updated = withReach(updated, in: scene)
                 }
+                placements[index] = updated
             }
         )
     }
@@ -287,16 +296,23 @@ struct ScanEditorView: View {
         let linked = Set(placements.compactMap(\.positionID))
         let suggestion = project.allPositions.first { !linked.contains($0.position.id) }?.position.id
 
-        let placement = ScanCameraPlacement(
+        var placement = ScanCameraPlacement(
             positionID: suggestion,
             x: Double(position.x),
             y: Double(position.y),
             z: Double(position.z),
             yawDegrees: yaw ?? 0
         )
+        if let scene { placement = withReach(placement, in: scene) }
         placements.append(placement)
         isPlacing = false
         selectedID = placement.id
+    }
+
+    private func withReach(_ placement: ScanCameraPlacement, in scene: SCNScene) -> ScanCameraPlacement {
+        var placement = placement
+        placement.planReach = ScanVisibility.planReach(in: scene.rootNode, for: placement)
+        return placement
     }
 
     private func scheduleSave() {

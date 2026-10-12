@@ -54,6 +54,8 @@ struct ScanSceneView: UIViewRepresentable {
         var parent: ScanSceneView
         var markerRoot: SCNNode?
         private var lastSignature: Int?
+        /// Berechnete Sichtbarkeit je Kamera; nur geänderte Kameras werden neu berechnet.
+        private var visibilityCache: [ScanVisibility.Key: ScanVisibility.Geometry] = [:]
 
         init(parent: ScanSceneView) {
             self.parent = parent
@@ -88,9 +90,20 @@ struct ScanSceneView: UIViewRepresentable {
             lastSignature = signature
 
             markerRoot.childNodes.forEach { $0.removeFromParentNode() }
+            var usedKeys = Set<ScanVisibility.Key>()
             for placement in parent.placements {
-                markerRoot.addChildNode(CameraMarkerNode.make(for: placement, selected: placement.id == parent.selectedID))
+                let key = ScanVisibility.Key(placement)
+                usedKeys.insert(key)
+                let visibility: ScanVisibility.Geometry
+                if let cached = visibilityCache[key] {
+                    visibility = cached
+                } else {
+                    visibility = ScanVisibility.geometry(in: parent.scene.rootNode, for: placement)
+                    visibilityCache[key] = visibility
+                }
+                markerRoot.addChildNode(CameraMarkerNode.make(for: placement, selected: placement.id == parent.selectedID, visibility: visibility))
             }
+            visibilityCache = visibilityCache.filter { usedKeys.contains($0.key) }
         }
 
         /// Verschiebt Kamera und Drehpunkt gemeinsam in der Bildebene.
@@ -164,7 +177,7 @@ enum CameraMarkerNode {
         return nil
     }
 
-    static func make(for placement: ScanCameraPlacement, selected: Bool) -> SCNNode {
+    static func make(for placement: ScanCameraPlacement, selected: Bool, visibility: ScanVisibility.Geometry) -> SCNNode {
         let root = SCNNode()
         root.name = prefix + placement.id.uuidString
         root.position = SCNVector3(Float(placement.x), Float(placement.y), Float(placement.z))
@@ -187,17 +200,19 @@ enum CameraMarkerNode {
         lens.position = SCNVector3(0, 0, -0.1)
         pitchNode.addChildNode(lens)
 
-        // Blickkegel: Spitze bei der Kamera, Öffnung entlang −z.
-        let range = CGFloat(min(placement.rangeMeters, 30))
-        let halfAngle = min(placement.fieldOfViewDegrees, 170) / 2 * .pi / 180
-        let cone = SCNCone(topRadius: 0, bottomRadius: range * CGFloat(tan(halfAngle)), height: range)
-        cone.radialSegmentCount = 36
-        cone.materials = [coneMaterial(selected: selected)]
-        let coneNode = SCNNode(geometry: cone)
-        coneNode.eulerAngles.x = .pi / 2
-        coneNode.position = SCNVector3(0, 0, -Float(range) / 2)
-        coneNode.renderingOrder = 10
-        pitchNode.addChildNode(coneNode)
+        // Blickkörper und sichtbare Fläche liegen in Weltrichtung relativ zum Montagepunkt (ohne Drehung).
+        if let volume = visibility.volume?.copy() as? SCNGeometry {
+            volume.materials = [ScanVisibility.volumeMaterial(selected: selected)]
+            let node = SCNNode(geometry: volume)
+            node.renderingOrder = 10
+            root.addChildNode(node)
+        }
+        if let footprint = visibility.footprint?.copy() as? SCNGeometry {
+            footprint.materials = [ScanVisibility.footprintMaterial(selected: selected)]
+            let node = SCNNode(geometry: footprint)
+            node.renderingOrder = 11
+            root.addChildNode(node)
+        }
 
         root.enumerateHierarchy { node, _ in node.categoryBitMask = ScanModelFile.markerCategory }
         return root
@@ -207,16 +222,6 @@ enum CameraMarkerNode {
         let material = SCNMaterial()
         material.diffuse.contents = color
         material.lightingModel = lit ? .lambert : .constant
-        return material
-    }
-
-    private static func coneMaterial(selected: Bool) -> SCNMaterial {
-        let material = SCNMaterial()
-        material.diffuse.contents = OstsichtColor.sonne.withAlphaComponent(selected ? 0.35 : 0.2)
-        material.lightingModel = .constant
-        material.isDoubleSided = true
-        material.writesToDepthBuffer = false
-        material.blendMode = .alpha
         return material
     }
 }

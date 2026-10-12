@@ -67,6 +67,8 @@ public struct DocumentFloorPlanMarker: Hashable, Sendable {
     public var yawDegrees: Double
     public var fieldOfViewDegrees: Double
     public var rangeMeters: Double
+    /// Sichtweite bis zur Wand je Richtung (leer = volle Reichweite).
+    public var reach: [Double]
 
     public init(number: Int, label: String, placement: ScanCameraPlacement) {
         self.number = number
@@ -76,6 +78,7 @@ public struct DocumentFloorPlanMarker: Hashable, Sendable {
         self.yawDegrees = placement.yawDegrees
         self.fieldOfViewDegrees = placement.fieldOfViewDegrees
         self.rangeMeters = placement.rangeMeters
+        self.reach = placement.effectivePlanReach
     }
 }
 

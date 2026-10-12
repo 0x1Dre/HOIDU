@@ -33,6 +33,17 @@ final class ScanTests: XCTestCase {
         XCTAssertEqual(ScanCameraPlacement.normalizedYaw(725), 5, accuracy: 0.0001)
     }
 
+    func testPlanReachIsLimitedByRangeAndDecodesWhenMissing() throws {
+        let placement = ScanCameraPlacement(x: 0, y: 0, z: 0, rangeMeters: 5, planReach: [2, 8, .nan])
+        XCTAssertEqual(placement.effectivePlanReach, [2, 5, 0])
+        XCTAssertEqual(ScanCameraPlacement(x: 0, y: 0, z: 0, planReach: [3]).effectivePlanReach, [])
+
+        let json = #"{"id":"6F9619FF-8B86-D011-B42D-00CF4FC964FF","x":1,"z":2}"#
+        let decoded = try JSONDecoder().decode(ScanCameraPlacement.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.planReach, [])
+        XCTAssertEqual(decoded.rangeMeters, ScanCameraPlacement.defaultRange)
+    }
+
     func testYawFromWallNormalLooksAwayFromWall() throws {
         // Wand mit Normale nach +x (Kamera schaut nach rechts) → 90°
         XCTAssertEqual(try XCTUnwrap(ScanCameraPlacement.yaw(fromNormalX: 1, normalZ: 0)), 90, accuracy: 0.0001)
