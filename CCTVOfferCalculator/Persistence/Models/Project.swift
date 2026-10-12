@@ -60,6 +60,8 @@ final class Project {
     var maintenancePlan: MaintenancePlan?
     @Relationship(deleteRule: .cascade, inverse: \Offer.project)
     var offers: [Offer] = []
+    @Relationship(deleteRule: .cascade, inverse: \SiteScan.project)
+    var scans: [SiteScan] = []
 
     init(id: UUID = UUID()) {
         self.id = id
@@ -146,7 +148,8 @@ final class Project {
             status: status,
             isDemo: isDemo,
             createdAt: createdAt,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            scans: scans.sorted { $0.sortIndex < $1.sortIndex }.map(\.record)
         )
     }
 
@@ -216,6 +219,13 @@ final class Project {
             id: { $0.id },
             create: { SiteArea(id: $0.id) },
             update: { model, area, index in model.apply(area, index: index, context: context) }
+        )
+
+        scans = ModelSync.sync(
+            scans, with: r.scans, context: context,
+            id: { $0.id },
+            create: { SiteScan(id: $0.id) },
+            update: { model, scan, index in model.apply(scan, index: index) }
         )
     }
 }

@@ -58,6 +58,46 @@ public struct DocumentPhoto: Hashable, Sendable, Identifiable {
     public var markers: [PhotoMarker]
 }
 
+/// Kamera im Grundriss: Nummer, Lage und Blickfeld.
+public struct DocumentFloorPlanMarker: Hashable, Sendable {
+    public var number: Int
+    public var label: String
+    public var x: Double
+    public var z: Double
+    public var yawDegrees: Double
+    public var fieldOfViewDegrees: Double
+    public var rangeMeters: Double
+
+    public init(number: Int, label: String, placement: ScanCameraPlacement) {
+        self.number = number
+        self.label = label
+        self.x = placement.x
+        self.z = placement.z
+        self.yawDegrees = placement.yawDegrees
+        self.fieldOfViewDegrees = placement.fieldOfViewDegrees
+        self.rangeMeters = placement.rangeMeters
+    }
+}
+
+/// Grundriss (Draufsicht eines 3D-Scans) mit eingezeichneten Kameras.
+public struct DocumentFloorPlan: Hashable, Sendable, Identifiable {
+    public var id: UUID
+    public var title: String
+    public var details: [String]
+    public var imageData: Data
+    public var bounds: ScanBounds
+    public var markers: [DocumentFloorPlanMarker]
+
+    public init(id: UUID, title: String, details: [String], imageData: Data, bounds: ScanBounds, markers: [DocumentFloorPlanMarker]) {
+        self.id = id
+        self.title = title
+        self.details = details
+        self.imageData = imageData
+        self.bounds = bounds
+        self.markers = markers
+    }
+}
+
 public enum DocumentBlock: Hashable, Sendable {
     case paragraph(String)
     case bullets([String])
@@ -65,6 +105,7 @@ public enum DocumentBlock: Hashable, Sendable {
     case table(DocumentTable)
     case notice(title: String, text: String, severity: WarningSeverity)
     case photos([DocumentPhoto])
+    case floorPlan(DocumentFloorPlan)
 }
 
 public struct DocumentSection: Hashable, Sendable {
@@ -104,6 +145,7 @@ public struct OfferDocument: Hashable, Sendable {
                 case .table(let table): parts += table.columns.map(\.title) + table.rows.flatMap { $0 }
                 case .notice(let title, let text, _): parts += [title, text]
                 case .photos(let photos): parts += photos.flatMap { [$0.title] + $0.details }
+                case .floorPlan(let plan): parts += [plan.title] + plan.details + plan.markers.map(\.label)
                 }
             }
         }

@@ -6,7 +6,7 @@ import CCTVCore
 extension WizardViewModel: Identifiable {}
 
 enum ProjectDetailTab: String, CaseIterable, Identifiable {
-    case empfehlung, varianten, vergleich, speicher, wartung, fotos, export
+    case empfehlung, varianten, vergleich, speicher, wartung, fotos, scans, export
 
     var id: String { rawValue }
 
@@ -18,6 +18,7 @@ enum ProjectDetailTab: String, CaseIterable, Identifiable {
         case .speicher: "Speicher"
         case .wartung: "Wartung"
         case .fotos: "Fotos"
+        case .scans: "3D"
         case .export: "Export"
         }
     }
@@ -30,6 +31,7 @@ enum ProjectDetailTab: String, CaseIterable, Identifiable {
         case .speicher: "externaldrive"
         case .wartung: "wrench.and.screwdriver"
         case .fotos: "photo.on.rectangle"
+        case .scans: "cube.transparent"
         case .export: "square.and.arrow.up"
         }
     }
@@ -163,6 +165,7 @@ struct ProjectDetailView: View {
                     case .speicher: StorageSummaryView(input: viewModel.storageInput, result: analysis.recommendedVariant?.selection.storage)
                     case .wartung: maintenance(analysis, viewModel: viewModel)
                     case .fotos: ProjectPhotosOverview(record: viewModel.record) { startEditing(at: .bereiche) }
+                    case .scans: scans(viewModel)
                     case .export: ExportPanel(project: project, record: viewModel.record, analysis: analysis)
                     }
                 }
@@ -289,6 +292,29 @@ struct ProjectDetailView: View {
             }
             .card()
         }
+    }
+
+    private func scans(_ viewModel: ProjectDetailViewModel) -> some View {
+        ProjectScansView(
+            record: viewModel.record,
+            onAdd: { scan in
+                viewModel.record.scans.append(scan)
+                save()
+            },
+            onUpdate: { id, name, note, placements in
+                guard let index = viewModel.record.scans.firstIndex(where: { $0.id == id }) else { return }
+                let current = viewModel.record.scans[index]
+                guard current.name != name || current.note != note || current.placements != placements else { return }
+                viewModel.record.scans[index].name = name
+                viewModel.record.scans[index].note = note
+                viewModel.record.scans[index].placements = placements
+                save()
+            },
+            onDelete: { id in
+                viewModel.record.scans.removeAll { $0.id == id }
+                save()
+            }
+        )
     }
 
     // MARK: - Aktionen

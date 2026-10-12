@@ -10,7 +10,7 @@
 		<string>de</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Die Kamera wird verwendet, um vor Ort Fotos der geplanten Kamerapositionen aufzunehmen. Die Fotos werden nur lokal auf diesem Gerät gespeichert.</string>
+	<string>Die Kamera wird verwendet, um vor Ort Fotos der geplanten Kamerapositionen aufzunehmen und Räume in 3D zu scannen. Fotos und Scans werden nur lokal auf diesem Gerät gespeichert.</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>

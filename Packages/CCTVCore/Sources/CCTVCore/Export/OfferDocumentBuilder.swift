@@ -40,6 +40,9 @@ public enum OfferDocumentBuilder {
         if let positions = positionsSection(project, audience: options.audience, includeCustomerPhotos: options.includePhotosInCustomerPDF) {
             sections.append(positions)
         }
+        if let floorPlans = floorPlanSection(project) {
+            sections.append(floorPlans)
+        }
         if let hints = hintsSection(analysis, isInternal: isInternal) {
             sections.append(hints)
         }
@@ -309,6 +312,55 @@ public enum OfferDocumentBuilder {
 
         guard !blocks.isEmpty else { return nil }
         return DocumentSection(title: showPhotos ? "Kamerapositionen und Fotos" : "Kamerapositionen", blocks: blocks, startsOnNewPage: true)
+    }
+
+    /// Grundrisse aus den 3D-Scans mit nummerierten Kameras und Blickfeldern.
+    static func floorPlanSection(_ project: ProjectRecord) -> DocumentSection? {
+        var blocks: [DocumentBlock] = []
+        var number = 0
+        for scan in project.scans {
+            guard let plan = scan.floorPlan, !plan.imageData.isEmpty else { continue }
+            var markers: [DocumentFloorPlanMarker] = []
+            var rows: [[String]] = []
+            for placement in scan.placements {
+                number += 1
+                let label = project.displayLabel(for: placement, number: number)
+                markers.append(DocumentFloorPlanMarker(number: number, label: label, placement: placement))
+                rows.append([
+                    "\(number)",
+                    label,
+                    project.areaName(for: placement) ?? "–",
+                    "\(Format.number(placement.fieldOfViewDegrees, fractionDigits: 0))°",
+                    "\(Format.number(placement.rangeMeters, fractionDigits: 0)) m"
+                ])
+            }
+            var details = ["\(scan.kind.label) · aufgenommen am \(Format.date(scan.createdAt))"]
+            details.append("Ausschnitt ca. \(Format.number(plan.bounds.width, fractionDigits: 1)) × \(Format.number(plan.bounds.depth, fractionDigits: 1)) m")
+            if !scan.note.isEmpty { details.append(scan.note) }
+            blocks.append(.floorPlan(DocumentFloorPlan(
+                id: scan.id,
+                title: scan.displayName,
+                details: details,
+                imageData: plan.imageData,
+                bounds: plan.bounds,
+                markers: markers
+            )))
+            if !rows.isEmpty {
+                blocks.append(.table(DocumentTable(
+                    columns: [
+                        DocumentColumn("Nr.", weight: 0.5),
+                        DocumentColumn("Kamera", weight: 3),
+                        DocumentColumn("Bereich", weight: 2),
+                        DocumentColumn("Blickwinkel", weight: 1.1, alignment: .trailing),
+                        DocumentColumn("Reichweite", weight: 1.1, alignment: .trailing)
+                    ],
+                    rows: rows
+                )))
+            }
+        }
+        guard !blocks.isEmpty else { return nil }
+        blocks.append(.paragraph("Die Blickfelder sind vereinfacht dargestellt. Der tatsächliche Bildausschnitt hängt von Kameramodell, Objektiv und Montage ab."))
+        return DocumentSection(title: "Grundriss und Kamerastandorte", blocks: blocks, startsOnNewPage: true)
     }
 
     static func hintsSection(_ analysis: OfferAnalysis, isInternal: Bool) -> DocumentSection? {

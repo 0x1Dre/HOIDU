@@ -182,6 +182,8 @@ private final class PDFPageWriter {
             drawNotice(title: title, message: message, severity: severity)
         case .photos(let photos):
             drawPhotos(photos)
+        case .floorPlan(let plan):
+            drawFloorPlan(plan)
         }
     }
 
@@ -312,6 +314,28 @@ private final class PDFPageWriter {
             y += rowHeight + 12
             index += 2
         }
+    }
+
+    private func drawFloorPlan(_ plan: DocumentFloorPlan) {
+        let title = attributed(plan.title, size: 11, weight: .semibold, color: text)
+        let details = attributed(plan.details.joined(separator: " · "), size: 8.5, color: muted)
+        let titleHeight = measure(title, width: contentWidth)
+        let detailsHeight = measure(details, width: contentWidth)
+        let maxHeight: CGFloat = 430
+        let aspect = CGFloat(plan.bounds.width / plan.bounds.depth)
+        let boxHeight = min(maxHeight, contentWidth / max(aspect, 0.2))
+        ensureSpace(titleHeight + detailsHeight + boxHeight + 12)
+
+        draw(title, at: CGPoint(x: margin, y: y), width: contentWidth)
+        y += titleHeight + 1
+        draw(details, at: CGPoint(x: margin, y: y), width: contentWidth)
+        y += detailsHeight + 6
+
+        let box = CGRect(x: margin, y: y, width: contentWidth, height: boxHeight)
+        if let image = UIImage(data: plan.imageData) {
+            FloorPlanDrawing.draw(image: image, bounds: plan.bounds, markers: plan.markers, in: box, context: context.cgContext)
+        }
+        y += boxHeight + 10
     }
 
     private func drawMarkers(_ markers: [PhotoMarker], in rect: CGRect) {

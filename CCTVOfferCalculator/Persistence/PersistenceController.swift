@@ -13,6 +13,7 @@ enum PersistenceController {
         CameraRequirement.self,
         CameraPosition.self,
         PhotoAttachment.self,
+        SiteScan.self,
         Product.self,
         PriceList.self,
         Calculation.self,

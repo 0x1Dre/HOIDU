@@ -24,6 +24,7 @@ Hinweis: Das App-Target wurde in der Entwicklungsumgebung nicht mit Xcode kompil
 | --- | --- |
 | Dashboard | Kennzahlen, Schnellstart, zuletzt bearbeitete Projekte, Hinweis auf fehlende Firmenangaben |
 | Projekte | Suche, Statusfilter, Duplizieren, Löschen, JSON-Import |
+| 3D-Scan | Räume (RoomPlan) und Umgebung (LiDAR) scannen, Kameras im 3D-Modell platzieren, Grundriss in der Offerte |
 | Neues Projekt | Assistent in 5 Schritten mit Fortschrittsanzeige, Validierung und automatischer Entwurfssicherung |
 | Preislisten | Preislisten pro Hersteller, Einkauf/Verkauf/Marge je Position, Produkte bearbeiten, Zielmarge anwenden |
 | Herstellerprofile | Neutrale Profile von Eufy, Reolink, Dahua, Uniview und Axis |
@@ -157,6 +158,17 @@ Der Assistent sichert einen begonnenen Entwurf zudem automatisch lokal, damit vo
 ```
 
 Das Vollbackup verwendet `"format": "ch.cctv-offer-calculator.backup"` mit den Feldern `projects`, `priceLists` und `settings`. Dateien neuerer Formatversionen werden mit einer klaren Meldung abgelehnt.
+
+## 3D-Scan und Kameraplanung
+
+Im Projekt gibt es den Reiter **3D**. Damit lassen sich Räume und Umgebung mit dem LiDAR-Sensor erfassen (iPhone Pro ab 12, iPad Pro ab 2020) und die geplanten Kameras direkt im 3D-Modell platzieren.
+
+- **Raum scannen** (Apple RoomPlan): erkennt Wände, Türen, Fenster und Möbel. Nur in Innenräumen.
+- **Umgebung scannen** (ARKit Scene Reconstruction): freies Dreiecksnetz, auch draussen, Reichweite rund 5 m.
+- **Kamera setzen:** In der 3D-Ansicht auf die Wand tippen. Die Kamera schaut automatisch von der Wand weg. Blickrichtung, Neigung, Öffnungswinkel, Reichweite und Höhe sind einstellbar.
+- **Verknüpfung:** Jede platzierte Kamera kann mit einer Kameraposition aus den Überwachungsbereichen verknüpft werden; beim Setzen wird die nächste freie Position vorgeschlagen.
+- **Grundriss:** Beim Scannen entsteht eine Draufsicht. Kameras erscheinen darauf nummeriert mit Blickfeld – in der App und im Abschnitt «Grundriss und Kamerastandorte» der Kunden- und der internen Offerte.
+- **Speicherung:** Modell (`.scn`) und Grundriss liegen lokal in der Datenbank (`externalStorage`). Der JSON-Export ohne Fotos enthält nur die Platzierungen; das Vollbackup enthält alles.
 
 ## Gestaltung (Ostsicht CI/CD)
 

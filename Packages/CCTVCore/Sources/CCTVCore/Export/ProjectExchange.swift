@@ -152,17 +152,32 @@ public enum ProjectExchange {
         var copy = project
         copy.id = UUID()
         copy.reference = project.reference + referenceSuffix
+        var positionIDs: [UUID: UUID] = [:]
         copy.areas = project.areas.map { area in
             var area = area
             area.id = UUID()
             area.photos = area.photos.map { var p = $0; p.id = UUID(); return p }
             area.positions = area.positions.map { position in
                 var position = position
-                position.id = UUID()
+                let newID = UUID()
+                positionIDs[position.id] = newID
+                position.id = newID
                 position.photos = position.photos.map { var p = $0; p.id = UUID(); return p }
                 return position
             }
             return area
+        }
+        // Scans erhalten neue IDs; Verknüpfungen zu Kamerapositionen zeigen auf die neuen Positionen.
+        copy.scans = project.scans.map { scan in
+            var scan = scan
+            scan.id = UUID()
+            scan.placements = scan.placements.map { placement in
+                var placement = placement
+                placement.id = UUID()
+                placement.positionID = placement.positionID.flatMap { positionIDs[$0] }
+                return placement
+            }
+            return scan
         }
         return copy
     }

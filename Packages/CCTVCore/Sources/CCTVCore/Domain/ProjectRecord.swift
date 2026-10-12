@@ -381,6 +381,8 @@ public struct ProjectRecord: Codable, Hashable, Sendable, Identifiable {
     public var isDemo: Bool
     public var createdAt: Date
     public var updatedAt: Date
+    /// 3D-Scans mit platzierten Kameras.
+    public var scans: [SiteScanRecord]
 
     public init(
         id: UUID = UUID(),
@@ -401,7 +403,8 @@ public struct ProjectRecord: Codable, Hashable, Sendable, Identifiable {
         status: ProjectStatus = .entwurf,
         isDemo: Bool = false,
         createdAt: Date = Date(),
-        updatedAt: Date = Date()
+        updatedAt: Date = Date(),
+        scans: [SiteScanRecord] = []
     ) {
         self.id = id
         self.reference = reference
@@ -422,6 +425,37 @@ public struct ProjectRecord: Codable, Hashable, Sendable, Identifiable {
         self.isDemo = isDemo
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.scans = scans
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, reference, surveyDate, objectType, siteStreet, sitePostalCode, siteCity, notes, customer, areas
+        case infrastructure, recording, maintenance, variantSelection, discountPercent, status, isDemo, createdAt, updatedAt, scans
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        reference = try c.decode(String.self, forKey: .reference)
+        surveyDate = try c.decode(Date.self, forKey: .surveyDate)
+        objectType = try c.decode(ObjectType.self, forKey: .objectType)
+        siteStreet = try c.decode(String.self, forKey: .siteStreet)
+        sitePostalCode = try c.decode(String.self, forKey: .sitePostalCode)
+        siteCity = try c.decode(String.self, forKey: .siteCity)
+        notes = try c.decode(String.self, forKey: .notes)
+        customer = try c.decode(CustomerRecord.self, forKey: .customer)
+        areas = try c.decode([SiteAreaRecord].self, forKey: .areas)
+        infrastructure = try c.decode(InfrastructureRecord.self, forKey: .infrastructure)
+        recording = try c.decode(RecordingRecord.self, forKey: .recording)
+        maintenance = try c.decode(MaintenanceSelection.self, forKey: .maintenance)
+        variantSelection = try c.decode(VariantSelection.self, forKey: .variantSelection)
+        discountPercent = try c.decode(Decimal.self, forKey: .discountPercent)
+        status = try c.decode(ProjectStatus.self, forKey: .status)
+        isDemo = try c.decode(Bool.self, forKey: .isDemo)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        updatedAt = try c.decode(Date.self, forKey: .updatedAt)
+        // Neu ab Scan-Funktion: ältere Dateien enthalten keine Scans.
+        scans = try c.decodeIfPresent([SiteScanRecord].self, forKey: .scans) ?? []
     }
 
     public var totalCameras: Int {
@@ -444,6 +478,12 @@ public struct ProjectRecord: Codable, Hashable, Sendable, Identifiable {
                 return position
             }
             return area
+        }
+        copy.scans = scans.map { scan in
+            var scan = scan
+            scan.modelData = nil
+            scan.floorPlan = nil
+            return scan
         }
         return copy
     }
