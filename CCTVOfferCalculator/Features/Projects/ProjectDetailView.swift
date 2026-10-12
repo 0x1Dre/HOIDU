@@ -521,6 +521,9 @@ struct PhotoViewer: View {
 struct ProjectTabBar: View {
     @Binding var selection: ProjectDetailTab
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var didHint = false
+
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
@@ -557,6 +560,19 @@ struct ProjectTabBar: View {
             .scrollClipDisabled()
             .onChange(of: selection) { _, tab in
                 withAnimation(.snappy) { proxy.scrollTo(tab, anchor: .center) }
+            }
+            .task {
+                // Hinweis beim Öffnen: kurz nach rechts rollen und zurück, damit sichtbar ist, dass es weitergeht.
+                guard !didHint, !reduceMotion else { return }
+                didHint = true
+                try? await Task.sleep(for: .milliseconds(450))
+                withAnimation(.easeInOut(duration: 0.45)) {
+                    proxy.scrollTo(ProjectDetailTab.wartung, anchor: .trailing)
+                }
+                try? await Task.sleep(for: .milliseconds(650))
+                withAnimation(.spring(duration: 0.5, bounce: 0.25)) {
+                    proxy.scrollTo(selection, anchor: .center)
+                }
             }
         }
         .accessibilityElement(children: .contain)
