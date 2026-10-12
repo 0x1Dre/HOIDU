@@ -33,6 +33,13 @@ struct ScanSceneView: UIViewRepresentable {
 
         let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
         view.addGestureRecognizer(tap)
+
+        // Zwei Finger: Ansicht verschieben (ein Finger dreht, Pinch zoomt – von SceneKit).
+        let pan = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handlePan(_:)))
+        pan.minimumNumberOfTouches = 2
+        pan.maximumNumberOfTouches = 2
+        pan.delegate = context.coordinator
+        view.addGestureRecognizer(pan)
         context.coordinator.frameScene(in: view)
         return view
     }
@@ -43,7 +50,7 @@ struct ScanSceneView: UIViewRepresentable {
     }
 
     @MainActor
-    final class Coordinator: NSObject {
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
         var parent: ScanSceneView
         var markerRoot: SCNNode?
         private var lastSignature: Int?
@@ -84,6 +91,31 @@ struct ScanSceneView: UIViewRepresentable {
             for placement in parent.placements {
                 markerRoot.addChildNode(CameraMarkerNode.make(for: placement, selected: placement.id == parent.selectedID))
             }
+        }
+
+        /// Verschiebt Kamera und Drehpunkt gemeinsam in der Bildebene.
+        @objc func handlePan(_ gesture: UIPanGestureRecognizer) {
+            guard let view = gesture.view as? SCNView, let pointOfView = view.pointOfView else { return }
+            let translation = gesture.translation(in: view)
+            gesture.setTranslation(.zero, in: view)
+            guard translation != .zero else { return }
+
+            let controller = view.defaultCameraController
+            let target = SIMD3<Float>(controller.target)
+            let distance = max(simd_distance(pointOfView.simdWorldPosition, target), 0.5)
+            let fieldOfView = Float(pointOfView.camera?.fieldOfView ?? 60) * .pi / 180
+            // Meter pro Bildschirmpunkt in der Entfernung des Drehpunkts.
+            let metersPerPoint = 2 * distance * tan(fieldOfView / 2) / Float(max(view.bounds.height, 1))
+            let delta = pointOfView.simdWorldRight * (-Float(translation.x) * metersPerPoint)
+                + pointOfView.simdWorldUp * (Float(translation.y) * metersPerPoint)
+
+            pointOfView.simdWorldPosition += delta
+            controller.target = SCNVector3(target + delta)
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+            true
         }
 
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
