@@ -265,23 +265,23 @@ enum RoomModelBuilder {
 
     // MARK: Grundriss
 
-    private static func world(_ transform: simd_float4x4, _ point: SIMD3<Float>) -> SIMD3<Float> {
+    nonisolated private static func world(_ transform: simd_float4x4, _ point: SIMD3<Float>) -> SIMD3<Float> {
         let v = transform * SIMD4<Float>(point.x, point.y, point.z, 1)
         return SIMD3(v.x, v.y, v.z)
     }
 
     /// Endpunkte einer senkrechten Fläche (Wand, Tür, Fenster) in Weltkoordinaten.
-    private static func endpoints(_ surface: CapturedRoom.Surface) -> (SIMD3<Float>, SIMD3<Float>) {
+    nonisolated private static func endpoints(_ surface: CapturedRoom.Surface) -> (SIMD3<Float>, SIMD3<Float>) {
         let half = surface.dimensions.x / 2
         return (world(surface.transform, SIMD3(-half, 0, 0)), world(surface.transform, SIMD3(half, 0, 0)))
     }
 
-    private static func footprint(_ object: CapturedRoom.Object) -> [SIMD3<Float>] {
+    nonisolated private static func footprint(_ object: CapturedRoom.Object) -> [SIMD3<Float>] {
         let dx = object.dimensions.x / 2, dz = object.dimensions.z / 2
         return [SIMD3(-dx, 0, -dz), SIMD3(dx, 0, -dz), SIMD3(dx, 0, dz), SIMD3(-dx, 0, dz)].map { world(object.transform, $0) }
     }
 
-    private static func floorPolygon(_ floor: CapturedRoom.Surface) -> [SIMD3<Float>] {
+    nonisolated private static func floorPolygon(_ floor: CapturedRoom.Surface) -> [SIMD3<Float>] {
         if floor.polygonCorners.count >= 3 {
             return floor.polygonCorners.map { world(floor.transform, $0) }
         }
