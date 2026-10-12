@@ -60,7 +60,7 @@
         <figure class="einstieg__plan">
           <svg viewBox="0 0 640 500" role="img" aria-labelledby="plan-titel plan-text">
             <title id="plan-titel">Beispiel-Grundriss eines Hofs</title>
-            <desc id="plan-text">Wohnhaus, Stall und Maschinenhalle mit vier geplanten Kameras. Orange Flächen zeigen, was jede Kamera sieht.</desc>
+            <desc id="plan-text">Wohnhaus, Stall und Maschinenhalle mit vier Kameras: Zufahrt, Hofplatz mit Hallentor, Hauseingang und Stall. Orange Flächen zeigen, was jede Kamera sieht.</desc>
             <defs>
               <pattern id="raster" width="20" height="20" patternUnits="userSpaceOnUse">
                 <path d="M20 0 H0 V20" fill="none" stroke="#E7E4DA" stroke-width="1"/>
@@ -74,9 +74,9 @@
 
             <!-- Blickfelder aussen (unter den Gebäuden, damit Wände die Sicht begrenzen) -->
             <g fill="#F29A1F" fill-opacity=".26" stroke="#F29A1F" stroke-opacity=".85" stroke-width="1.5">
-              <path class="blickfeld" style="--o: 300px 214px; --i: 0" d="M300 214 L308.3 403.8 A190 190 0 0 1 110.2 205.7 Z"/>
-              <path class="blickfeld" style="--o: 322px 286px; --i: 1" d="M322 286 L153.0 331.3 A175 175 0 0 1 276.7 117.0 Z"/>
-              <path class="blickfeld" style="--o: 236px 214px; --i: 2" d="M236 214 L385.9 220.5 A150 150 0 0 1 242.5 363.9 Z"/>
+              <path class="blickfeld" style="--o: 60px 213px; --i: 0" d="M60 213 L171.8 372.7 A195 195 0 0 1 -13.0 393.8 Z"/>
+              <path class="blickfeld" style="--o: 300px 214px; --i: 1" d="M300 214 L361.8 404.2 A200 200 0 0 1 176.9 371.6 Z"/>
+              <path class="blickfeld" style="--o: 297px 135px; --i: 2" d="M297 135 L229.5 174.0 A78 78 0 0 1 229.5 96.0 Z"/>
             </g>
 
             <!-- Gebäude -->
@@ -107,9 +107,9 @@
 
             <!-- Kameras -->
             <g font-family="Barlow, Arial, sans-serif" font-size="12" font-weight="600" fill="#FFFFFF" text-anchor="middle">
-              <circle cx="300" cy="214" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="300" y="218.5">1</text>
-              <circle cx="322" cy="286" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="322" y="290.5">2</text>
-              <circle cx="236" cy="214" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="236" y="218.5">3</text>
+              <circle cx="60" cy="213" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="60" y="217.5">1</text>
+              <circle cx="300" cy="214" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="300" y="218.5">2</text>
+              <circle cx="297" cy="135" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="297" y="139.5">3</text>
               <circle cx="452" cy="56" r="11" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/><text x="452" y="60.5">4</text>
             </g>
           </svg>
@@ -214,7 +214,7 @@
               <h3>Wünsche erfassen</h3>
               <p>Gemeinsam gehen wir Bereich für Bereich durch: Was soll man sehen, wann wird aufgezeichnet, wer schaut zu? Jede geplante Montagestelle halten wir mit einem Foto fest.</p>
             </div>
-            <div class="app" role="img" aria-label="Beispiel: Erfassung der Bereiche und Anforderungen für einen Hof">
+            <div class="app" role="img" aria-label="Beispiel: Erfassung der Bereiche und Anforderungen für einen Hof, mit Fotos der geplanten Montagestellen">
               <div class="app__titel"><strong>Hof Beispiel</strong><span>Schritt 2 von 5</span></div>
               <div class="chips">
                 <span class="chip chip--an">Zufahrt</span>
@@ -226,7 +226,20 @@
               <div class="feld"><span>Nachtsicht</span><span>Farbbild</span></div>
               <div class="feld"><span>Aufzeichnung</span><span>Bei Bewegung, 14 Tage</span></div>
               <div class="feld"><span>Zugriff</span><span>Smartphone</span></div>
-              <div class="fotos" aria-hidden="true"><span class="foto"></span><span class="foto"></span><span class="foto"></span></div>
+              <div class="fotos" aria-hidden="true">
+                <figure class="foto">
+                  <svg viewBox="0 0 120 90"><rect width="120" height="90" fill="#D6DEE3"/><path d="M0 58 L120 52 V90 H0Z" fill="#C8C1AE"/><path d="M58 90 L84 54 L94 54 L104 90Z" fill="#A9A393"/><path d="M0 22 L64 30 V62 L0 64Z" fill="#EEEAE0"/><path d="M0 22 L64 30" stroke="#5F6368" stroke-width="3"/><rect x="18" y="38" width="16" height="26" fill="#9AA6A0"/><circle cx="58" cy="36" r="6.5" fill="none" stroke="#F29A1F" stroke-width="2"/><circle cx="58" cy="36" r="1.8" fill="#F29A1F"/></svg>
+                  <figcaption>Zufahrt</figcaption>
+                </figure>
+                <figure class="foto">
+                  <svg viewBox="0 0 120 90"><rect width="120" height="90" fill="#D6DEE3"/><rect y="14" width="120" height="76" fill="#C7B28C"/><path d="M0 14 H120" stroke="#6E6252" stroke-width="4"/><path d="M15 14V90M30 14V90M45 14V90M75 14V90M90 14V90M105 14V90" stroke="#B19C77" stroke-width="1"/><rect x="34" y="34" width="52" height="56" fill="#7E6D55"/><path d="M34 34 L86 90 M86 34 L34 90" stroke="#968466" stroke-width="2"/><circle cx="60" cy="24" r="6.5" fill="none" stroke="#F29A1F" stroke-width="2"/><circle cx="60" cy="24" r="1.8" fill="#F29A1F"/></svg>
+                  <figcaption>Stalltor</figcaption>
+                </figure>
+                <figure class="foto">
+                  <svg viewBox="0 0 120 90"><rect width="120" height="90" fill="#D6DEE3"/><rect y="10" width="120" height="80" fill="#AEB7BD"/><path d="M8 10V90M16 10V90M24 10V90M96 10V90M104 10V90M112 10V90" stroke="#9AA3A9" stroke-width="1.5"/><rect x="32" y="30" width="56" height="60" fill="#8E989F"/><path d="M32 38H88M32 46H88M32 54H88M32 62H88M32 70H88M32 78H88" stroke="#7D868C" stroke-width="1.5"/><circle cx="96" cy="24" r="6.5" fill="none" stroke="#F29A1F" stroke-width="2"/><circle cx="96" cy="24" r="1.8" fill="#F29A1F"/></svg>
+                  <figcaption>Hallentor</figcaption>
+                </figure>
+              </div>
             </div>
           </li>
 
@@ -251,13 +264,10 @@
                 <!-- Werkbank -->
                 <path d="M200 175 L250 155 L290 171 L240 191 Z" fill="#CFCBBF" stroke="#9E998B"/>
                 <!-- Blickfeld: endet an Boden und Wand -->
-                <path d="M62 82 L300 150 L196 214 L82 172 Z" fill="#F29A1F" fill-opacity=".28" stroke="#F29A1F" stroke-width="1.5"/>
+                <path d="M40 100 L300 150 L196 214 L82 172 Z" fill="#F29A1F" fill-opacity=".28" stroke="#F29A1F" stroke-width="1.5"/>
                 <path d="M196 214 L300 150 L240 191 Z" fill="#F29A1F" fill-opacity=".45"/>
                 <!-- Kamera -->
-                <circle cx="62" cy="82" r="9" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/>
-                <!-- Foto-Aufnahme -->
-                <rect x="276" y="186" width="38" height="28" rx="2" fill="#FFFFFF" stroke="#5F6368"/>
-                <rect x="279" y="189" width="32" height="22" fill="#B8C7BB"/>
+                <circle cx="40" cy="100" r="9" fill="#1B7A44" stroke="#FFFFFF" stroke-width="2.5"/>
               </svg>
             </div>
           </li>

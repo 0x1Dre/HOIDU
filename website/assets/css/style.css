@@ -201,12 +201,9 @@ p { margin: 0 0 1em; max-width: 64ch; }
 .feld { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 9px 0; border-top: 1px solid var(--kalk); }
 .feld span:last-child { font-weight: 600; }
 .fotos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
-.foto { aspect-ratio: 4 / 3; border-radius: var(--radius-klein); background: linear-gradient(160deg, #cfd8cf, #9fb3a3 60%, #7d8f82); position: relative; overflow: hidden; }
-.foto::after { content: ""; position: absolute; left: 30%; top: 22%; width: 26%; height: 34%; border: 2px solid var(--sonne); border-radius: 50%; }
-.foto:nth-child(2) { background: linear-gradient(170deg, #e2dccd, #c9bda4 55%, #8f8571); }
-.foto:nth-child(2)::after { left: 56%; top: 30%; width: 0; height: 0; border: 0; border-left: 22px solid transparent; }
-.foto:nth-child(3) { background: linear-gradient(165deg, #d5dde4, #a8b5bf 60%, #6f7b85); }
-.foto:nth-child(3)::after { display: none; }
+.foto { margin: 0; }
+.foto svg { display: block; width: 100%; height: auto; border-radius: var(--radius-klein); }
+.foto figcaption { margin-top: 5px; font-size: .8125rem; color: var(--grau); }
 
 .app--modell svg { width: 100%; height: auto; }
 
