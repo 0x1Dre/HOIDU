@@ -92,6 +92,8 @@ struct RoomScanScreen: View {
     let onCancel: () -> Void
 
     @State private var controller = RoomScanController()
+    @State private var pointCloud = ScanPointCloud()
+    @State private var showPoints = true
     @State private var isSaving = false
     @State private var errorMessage: String?
 
@@ -99,6 +101,11 @@ struct RoomScanScreen: View {
         ZStack {
             RoomCaptureContainer(controller: controller)
                 .ignoresSafeArea()
+
+            if showPoints, case .scanning = controller.phase {
+                PointCloudOverlay(session: controller.captureView.captureSession.arSession, cloud: pointCloud)
+                    .ignoresSafeArea()
+            }
 
             VStack {
                 HStack {
@@ -109,6 +116,7 @@ struct RoomScanScreen: View {
                     .buttonStyle(.secondaryAction)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.controlRadius))
                     Spacer()
+                    PointsToggle(isOn: $showPoints)
                 }
                 Spacer()
                 bottomPanel
@@ -154,6 +162,7 @@ struct RoomScanScreen: View {
         case .review(let room):
             HStack(spacing: 12) {
                 Button {
+                    pointCloud.reset()
                     controller.start()
                 } label: {
                     Label("Neu", systemImage: "arrow.counterclockwise")

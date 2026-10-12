@@ -30,7 +30,6 @@ final class MeshScanController {
         configuration.sceneReconstruction = .mesh
         configuration.environmentTexturing = .none
         configuration.planeDetection = [.horizontal, .vertical]
-        arView.debugOptions.insert(.showSceneUnderstanding)
         arView.renderOptions.insert(.disableMotionBlur)
         arView.session.delegate = delegateProxy
         arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
@@ -123,6 +122,24 @@ final class ARSessionDelegateProxy: NSObject, ARSessionDelegate {
     }
 }
 
+/// Schaltet die Punktedarstellung beim Scannen ein und aus.
+struct PointsToggle: View {
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Button {
+            isOn.toggle()
+        } label: {
+            Image(systemName: isOn ? "circle.grid.3x3.fill" : "circle.grid.3x3")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(isOn ? Theme.gruen : Theme.grau)
+                .frame(width: Theme.minimumTouchTarget, height: Theme.minimumTouchTarget)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.controlRadius))
+        }
+        .accessibilityLabel(isOn ? "Erfasste Punkte ausblenden" : "Erfasste Punkte anzeigen")
+    }
+}
+
 private struct ARViewContainer: UIViewRepresentable {
     let controller: MeshScanController
 
@@ -136,6 +153,8 @@ struct MeshScanScreen: View {
     let onCancel: () -> Void
 
     @State private var controller = MeshScanController()
+    @State private var pointCloud = ScanPointCloud()
+    @State private var showPoints = true
     @State private var isSaving = false
     @State private var errorMessage: String?
 
@@ -143,6 +162,11 @@ struct MeshScanScreen: View {
         ZStack {
             ARViewContainer(controller: controller)
                 .ignoresSafeArea()
+
+            if showPoints {
+                PointCloudOverlay(session: controller.arView.session, cloud: pointCloud)
+                    .ignoresSafeArea()
+            }
 
             VStack(spacing: 12) {
                 HStack {
@@ -153,6 +177,7 @@ struct MeshScanScreen: View {
                     .buttonStyle(.secondaryAction)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.controlRadius))
                     Spacer()
+                    PointsToggle(isOn: $showPoints)
                     Text("\(controller.meshAnchorCount) Abschnitte")
                         .font(.brand(.footnote).monospacedDigit())
                         .padding(.horizontal, 10)
@@ -215,6 +240,7 @@ struct MeshScanScreen: View {
             } catch {
                 isSaving = false
                 errorMessage = error.localizedDescription
+                pointCloud.reset()
                 controller.start()
             }
         }
