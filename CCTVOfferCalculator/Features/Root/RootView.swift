@@ -10,6 +10,7 @@ struct RootView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.scenePhase) private var scenePhase
     @State private var showStorageError = false
+    @State private var showOnboarding = false
 
     var body: some View {
         @Bindable var bindableRouter = router
@@ -61,6 +62,14 @@ struct RootView: View {
         .task {
             PersistenceController.seedIfNeeded(context: modelContext, settings: settings)
             showStorageError = storageError != nil
+            // Einrichtung nur, solange keine Firmenangaben hinterlegt sind (und kein Speicherfehler offen ist).
+            showOnboarding = storageError == nil && !settings.company.isComplete
+        }
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingView { showOnboarding = false }
+                .environment(settings)
+                .font(.brand(.body))
+                .tint(Theme.gruen)
         }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active {

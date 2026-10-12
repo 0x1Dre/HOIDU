@@ -11,6 +11,10 @@
 			isa = PBXBuildFile;
 			fileRef = 2C1DA8268D33C71BC8BD67D3;
 		};
+		09907A5A7226AC74E21474B2 = {
+			isa = PBXBuildFile;
+			fileRef = F2AD70BBCDD996D3F8EE8FF7;
+		};
 		13C7C5CBD5EA6EB5B07CD547 = {
 			isa = PBXBuildFile;
 			fileRef = CC4D0B54C6D8655A37A0C715;
@@ -573,6 +577,12 @@
 			path = ExportPanel.swift;
 			sourceTree = "<group>";
 		};
+		F2AD70BBCDD996D3F8EE8FF7 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = OnboardingView.swift;
+			sourceTree = "<group>";
+		};
 		F4F14A182325735317C5991E = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
@@ -645,6 +655,7 @@
 				98983144E90E0DE038140ED3,
 				2C80F439DFB93C8B71C33F6F,
 				30F579A9C84A7A62F7D264DE,
+				BD4C4CD760BA399CF8AF82B1,
 				1ACF58D4B2E20F98B0B6B1D4,
 				E638360B68357D5C51598F40,
 				9065F44BC8D30D58EB6124E8,
@@ -784,6 +795,14 @@
 				EC520B874ED19BE537D393B8,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		BD4C4CD760BA399CF8AF82B1 = {
+			isa = PBXGroup;
+			children = (
+				F2AD70BBCDD996D3F8EE8FF7,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		BF378C109F49099896DAD0DB = {
@@ -928,6 +947,7 @@
 				DF7964F1C9F36DE395505FAC,
 				13C7C5CBD5EA6EB5B07CD547,
 				E1663F8DB90A1A117219DF8D,
+				09907A5A7226AC74E21474B2,
 				6265585FD5022BCBC8661BA0,
 				CFA7AFF05603838F00187897,
 				693C6E976C009E0D0D2F6D6F,
