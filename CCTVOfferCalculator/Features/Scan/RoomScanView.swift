@@ -72,7 +72,7 @@ final class RoomCaptureDelegateProxy: NSObject, RoomCaptureViewDelegate {
     func captureView(didPresent processedResult: CapturedRoom, error: (any Error)?) {
         guard let callback = onResult else { return }
         let message = error?.localizedDescription
-        nonisolated(unsafe) let room = message == nil ? processedResult : nil
+        let room = message == nil ? processedResult : nil
         MainActor.assumeIsolated {
             callback(room, message)
         }
