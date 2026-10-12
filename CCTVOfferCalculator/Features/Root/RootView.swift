@@ -12,10 +12,10 @@ struct RootView: View {
     @State private var showStorageError = false
 
     var body: some View {
-        @Bindable var router = router
+        @Bindable var bindableRouter = router
         Group {
             if horizontalSizeClass == .compact {
-                TabView(selection: $router.section) {
+                TabView(selection: $bindableRouter.section) {
                     ForEach(AppSection.allCases) { section in
                         SectionRoot(section: section)
                             .tabItem { Label(section.title, systemImage: section.systemImage) }
@@ -74,12 +74,12 @@ struct SectionRoot: View {
     @Environment(AppRouter.self) private var router
 
     var body: some View {
-        @Bindable var router = router
+        @Bindable var bindableRouter = router
         switch section {
         case .dashboard:
             NavigationStack { DashboardView() }
         case .projects:
-            NavigationStack(path: $router.projectPath) {
+            NavigationStack(path: $bindableRouter.projectPath) {
                 ProjectListView()
                     .navigationDestination(for: ProjectRoute.self) { route in
                         ProjectDetailLoader(id: route.id)

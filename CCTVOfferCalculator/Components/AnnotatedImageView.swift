@@ -30,10 +30,12 @@ struct MarkerOverlay: View {
     let imageRect: CGRect
 
     var body: some View {
+        let markers = markers
+        let rect = imageRect
         Canvas { context, _ in
-            let width = MarkerGeometry.lineWidth(in: imageRect)
+            let width = MarkerGeometry.lineWidth(in: rect)
             for marker in markers {
-                let path = Path(MarkerGeometry.path(for: marker, in: imageRect))
+                let path = Path(MarkerGeometry.path(for: marker, in: rect))
                 context.stroke(path, with: .color(.white.opacity(0.85)), style: StrokeStyle(lineWidth: width + 2, lineCap: .round, lineJoin: .round))
                 context.stroke(path, with: .color(.red), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
             }

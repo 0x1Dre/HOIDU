@@ -66,6 +66,12 @@ public struct OfferLineItem: Codable, Hashable, Sendable, Identifiable {
     public var totalSell: Decimal { (unitSellPrice * quantity).roundedTo(scale: 2) }
     public var marginAmount: Decimal { totalSell - totalPurchase }
     public var marginPercent: Decimal { PricingCalculator.marginPercent(sell: totalSell, cost: totalPurchase) }
+
+    /// Menge mit Einheit, ganze Zahlen ohne Nachkommastellen (z. B. «4 Stk.», «2.75 h»).
+    public var quantityText: String {
+        let decimals = quantity == quantity.roundedTo(scale: 0) ? 0 : 2
+        return "\(Format.number(quantity, fractionDigits: decimals)) \(unit.label)"
+    }
 }
 
 public struct OfferTotals: Codable, Hashable, Sendable {

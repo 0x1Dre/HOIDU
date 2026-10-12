@@ -219,7 +219,7 @@ public enum ComponentSelector {
         var cableMeters = 0
         if profile.usesPoE {
             let raw = Decimal(cameraCount * settings.cableMetersPerCamera) * infra.cabling.newCableShare
-            let meters = Int(raw.doubleValue.rounded(.up))
+            let meters = Int(raw.asDouble.rounded(.up))
             cableMeters = meters == 0 ? 0 : ((meters + 4) / 5) * 5
             if cableMeters > 0, let cable = cheapest(catalog.productsPreferring(manufacturer, role: .kabel)) {
                 items.append(OfferLineItem(product: cable, quantity: Decimal(cableMeters)))

@@ -14,28 +14,28 @@ struct SettingsView: View {
     private var repository: ProjectRepository { ProjectRepository(context: modelContext) }
 
     var body: some View {
-        @Bindable var store = store
+        @Bindable var bindableStore = store
         Form {
             Section {
-                TextField("Firmenname", text: $store.settings.company.name)
-                TextField("Strasse und Nummer", text: $store.settings.company.street)
+                TextField("Firmenname", text: $bindableStore.settings.company.name)
+                TextField("Strasse und Nummer", text: $bindableStore.settings.company.street)
                 HStack {
-                    TextField("PLZ", text: $store.settings.company.postalCode)
+                    TextField("PLZ", text: $bindableStore.settings.company.postalCode)
                         .keyboardType(.numberPad)
                         .frame(width: 90)
                     Divider()
-                    TextField("Ort", text: $store.settings.company.city)
+                    TextField("Ort", text: $bindableStore.settings.company.city)
                 }
-                TextField("Telefon", text: $store.settings.company.phone)
+                TextField("Telefon", text: $bindableStore.settings.company.phone)
                     .keyboardType(.phonePad)
-                TextField("E-Mail", text: $store.settings.company.email)
+                TextField("E-Mail", text: $bindableStore.settings.company.email)
                     .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
-                TextField("Website", text: $store.settings.company.website)
+                TextField("Website", text: $bindableStore.settings.company.website)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
-                TextField("MWST-Nummer (CHE-123.456.789 MWST)", text: $store.settings.company.vatNumber)
-                TextField("Schlusstext der Offerte", text: $store.settings.company.offerFooter, axis: .vertical)
+                TextField("MWST-Nummer (CHE-123.456.789 MWST)", text: $bindableStore.settings.company.vatNumber)
+                TextField("Schlusstext der Offerte", text: $bindableStore.settings.company.offerFooter, axis: .vertical)
                     .lineLimit(2...4)
                 if !store.settings.company.email.isEmpty && !ProjectValidator.isValidEmail(store.settings.company.email) {
                     FieldError(message: "Die E-Mail-Adresse ist ungültig.")
@@ -47,17 +47,17 @@ struct SettingsView: View {
             }
 
             Section {
-                DecimalField(title: "Stundensatz Verkauf", value: $store.settings.calculation.hourlyRate)
-                DecimalField(title: "Interner Kostensatz", value: $store.settings.calculation.internalHourlyCost)
-                DecimalField(title: "Anfahrtspauschale", value: $store.settings.calculation.travelFlatFee)
-                DecimalField(title: "Anfahrt interne Kosten", value: $store.settings.calculation.travelInternalCost)
-                DecimalField(title: "MWST-Satz", value: $store.settings.calculation.vatPercent, suffix: "%", fractionDigits: 1)
+                DecimalField(title: "Stundensatz Verkauf", value: $bindableStore.settings.calculation.hourlyRate)
+                DecimalField(title: "Interner Kostensatz", value: $bindableStore.settings.calculation.internalHourlyCost)
+                DecimalField(title: "Anfahrtspauschale", value: $bindableStore.settings.calculation.travelFlatFee)
+                DecimalField(title: "Anfahrt interne Kosten", value: $bindableStore.settings.calculation.travelInternalCost)
+                DecimalField(title: "MWST-Satz", value: $bindableStore.settings.calculation.vatPercent, suffix: "%", fractionDigits: 1)
                 if store.settings.calculation.vatPercent != CalculationSettings.swissVATPercent {
                     Text("Abweichend vom Schweizer Normalsatz \(Format.percent(CalculationSettings.swissVATPercent)).")
                         .font(.footnote)
                         .foregroundStyle(.orange)
                 }
-                Stepper(value: $store.settings.calculation.offerValidityDays, in: 7...180) {
+                Stepper(value: $bindableStore.settings.calculation.offerValidityDays, in: 7...180) {
                     LabeledContent("Gültigkeit der Offerte", value: "\(store.settings.calculation.offerValidityDays) Tage")
                 }
             } header: {
@@ -67,16 +67,16 @@ struct SettingsView: View {
             }
 
             Section("Annahmen Kalkulation") {
-                Stepper(value: $store.settings.calculation.cableMetersPerCamera, in: 5...100, step: 5) {
+                Stepper(value: $bindableStore.settings.calculation.cableMetersPerCamera, in: 5...100, step: 5) {
                     LabeledContent("Kabel pro Kamera", value: "\(store.settings.calculation.cableMetersPerCamera) m")
                 }
-                Picker("Standard-Festplatte", selection: $store.settings.calculation.defaultDiskSizeTB) {
+                Picker("Standard-Festplatte", selection: $bindableStore.settings.calculation.defaultDiskSizeTB) {
                     ForEach([4, 8, 12, 16], id: \.self) { Text("\($0) TB").tag($0) }
                 }
-                Stepper(value: $store.settings.calculation.storageSafetyMarginPercent, in: 0...100, step: 5) {
+                Stepper(value: $bindableStore.settings.calculation.storageSafetyMarginPercent, in: 0...100, step: 5) {
                     LabeledContent("Speicherreserve", value: "\(store.settings.calculation.storageSafetyMarginPercent) %")
                 }
-                Stepper(value: $store.settings.calculation.eventRecordingSharePercent, in: 5...100, step: 5) {
+                Stepper(value: $bindableStore.settings.calculation.eventRecordingSharePercent, in: 5...100, step: 5) {
                     LabeledContent("Aktivitätsanteil Ereignisaufnahme", value: "\(store.settings.calculation.eventRecordingSharePercent) %")
                 }
                 Button("Kalkulationswerte zurücksetzen", role: .destructive) {
@@ -98,9 +98,9 @@ struct SettingsView: View {
             }
 
             Section {
-                Toggle("Interner Modus (Einkauf und Margen anzeigen)", isOn: $store.internalMode)
-                Toggle("Fotos im Kunden-PDF", isOn: $store.includePhotosInCustomerPDF)
-                Toggle("Fotos im JSON-Export einbetten", isOn: $store.includePhotosInJSON)
+                Toggle("Interner Modus (Einkauf und Margen anzeigen)", isOn: $bindableStore.internalMode)
+                Toggle("Fotos im Kunden-PDF", isOn: $bindableStore.includePhotosInCustomerPDF)
+                Toggle("Fotos im JSON-Export einbetten", isOn: $bindableStore.includePhotosInJSON)
             } header: {
                 Text("Ansicht und Export")
             }
@@ -198,23 +198,23 @@ struct MaintenancePackageEditor: View {
     }
 
     var body: some View {
-        @Bindable var store = store
+        @Bindable var bindableStore = store
         Form {
             if let index {
                 Section("Preise pro Monat (exkl. MWST)") {
-                    DecimalField(title: "Grundgebühr", value: $store.settings.calculation.maintenancePackages[index].monthlyBaseFee)
-                    DecimalField(title: "Pro Kamera", value: $store.settings.calculation.maintenancePackages[index].pricePerCamera)
-                    DecimalField(title: "Pro NVR/VMS", value: $store.settings.calculation.maintenancePackages[index].pricePerRecorder)
+                    DecimalField(title: "Grundgebühr", value: $bindableStore.settings.calculation.maintenancePackages[index].monthlyBaseFee)
+                    DecimalField(title: "Pro Kamera", value: $bindableStore.settings.calculation.maintenancePackages[index].pricePerCamera)
+                    DecimalField(title: "Pro NVR/VMS", value: $bindableStore.settings.calculation.maintenancePackages[index].pricePerRecorder)
                 }
                 Section("Leistungsumfang") {
-                    Stepper(value: $store.settings.calculation.maintenancePackages[index].includedRemoteMinutes, in: 0...600, step: 15) {
+                    Stepper(value: $bindableStore.settings.calculation.maintenancePackages[index].includedRemoteMinutes, in: 0...600, step: 15) {
                         LabeledContent("Fernsupport inklusive", value: "\(store.settings.calculation.maintenancePackages[index].includedRemoteMinutes) Min.")
                     }
-                    Toggle("Jährlicher Vor-Ort-Service inklusive", isOn: $store.settings.calculation.maintenancePackages[index].onSiteCheckIncluded)
+                    Toggle("Jährlicher Vor-Ort-Service inklusive", isOn: $bindableStore.settings.calculation.maintenancePackages[index].onSiteCheckIncluded)
                     if !store.settings.calculation.maintenancePackages[index].onSiteCheckIncluded {
-                        DecimalField(title: "Vor-Ort-Check pro Jahr (Option)", value: $store.settings.calculation.maintenancePackages[index].yearlyOnSiteCheckPrice)
+                        DecimalField(title: "Vor-Ort-Check pro Jahr (Option)", value: $bindableStore.settings.calculation.maintenancePackages[index].yearlyOnSiteCheckPrice)
                     }
-                    TextField("Reaktionszeit", text: $store.settings.calculation.maintenancePackages[index].responseTime)
+                    TextField("Reaktionszeit", text: $bindableStore.settings.calculation.maintenancePackages[index].responseTime)
                 }
                 Section {
                     TextEditor(text: Binding(

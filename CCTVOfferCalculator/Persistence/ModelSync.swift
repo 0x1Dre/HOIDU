@@ -4,7 +4,7 @@ import SwiftData
 /// Gleicht eine To-many-Beziehung mit einer Liste von Domänenobjekten ab:
 /// vorhandene Objekte werden aktualisiert, neue eingefügt und fehlende gelöscht.
 /// So bleiben unveränderte Fotos auf der Festplatte und werden nicht neu geschrieben.
-@MainActor
+/// Bewusst nicht an einen Actor gebunden: läuft synchron auf dem Kontext (und Actor) des Aufrufers.
 enum ModelSync {
     static func sync<Model: PersistentModel, Record: Identifiable>(
         _ existing: [Model],

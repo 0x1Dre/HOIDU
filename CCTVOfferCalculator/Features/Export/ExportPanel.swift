@@ -18,11 +18,11 @@ struct ExportPanel: View {
     private var repository: ProjectRepository { ProjectRepository(context: modelContext) }
 
     var body: some View {
-        @Bindable var settings = settings
+        @Bindable var bindableSettings = settings
         VStack(alignment: .leading, spacing: 20) {
             VStack(alignment: .leading, spacing: 12) {
                 SectionHeader(title: "Offerte als PDF", subtitle: "Teilen, drucken, per Mail senden oder in «Dateien» sichern", systemImage: "doc.richtext")
-                Toggle("Fotos im Kunden-PDF anzeigen", isOn: $settings.includePhotosInCustomerPDF)
+                Toggle("Fotos im Kunden-PDF anzeigen", isOn: $bindableSettings.includePhotosInCustomerPDF)
                     .frame(minHeight: 44)
                 Text("Einzelne Fotos lassen sich beim Foto über «Im Kunden-PDF anzeigen» ausschliessen. Das interne PDF enthält immer alle Fotos.")
                     .font(.footnote)
@@ -41,7 +41,7 @@ struct ExportPanel: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 SectionHeader(title: "Daten exportieren", systemImage: "square.and.arrow.up.on.square")
-                Toggle("Fotos in JSON einbetten (Base64)", isOn: $settings.includePhotosInJSON)
+                Toggle("Fotos in JSON einbetten (Base64)", isOn: $bindableSettings.includePhotosInJSON)
                     .frame(minHeight: 44)
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 12) { dataButtons }

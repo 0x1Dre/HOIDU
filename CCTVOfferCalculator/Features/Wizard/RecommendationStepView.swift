@@ -11,7 +11,7 @@ struct RecommendationStepView: View {
 
     private var discount: Binding<Double> {
         Binding(
-            get: { viewModel.draft.discountPercent.doubleValue },
+            get: { viewModel.draft.discountPercent.asDouble },
             set: { viewModel.draft.discountPercent = Decimal(string: String(format: "%.1f", $0)) ?? 0 }
         )
     }

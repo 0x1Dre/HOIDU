@@ -236,7 +236,7 @@ struct ProjectDetailView: View {
             Stepper(
                 "Rabatt in 0.5-%-Schritten",
                 value: Binding(
-                    get: { viewModel.record.discountPercent.doubleValue },
+                    get: { viewModel.record.discountPercent.asDouble },
                     set: { value in
                         viewModel.record.discountPercent = Decimal(string: String(format: "%.1f", value)) ?? 0
                         save()

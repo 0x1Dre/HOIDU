@@ -164,11 +164,12 @@ struct PhotoDetailEditor: View {
         change(&photos[index])
     }
 
-    private func text(_ keyPath: WritableKeyPath<PhotoRecord, String>) -> Binding<String> {
-        Binding(
-            get: { photo?[keyPath: keyPath] ?? "" },
-            set: { value in update { $0[keyPath: keyPath] = value } }
-        )
+    private var caption: Binding<String> {
+        Binding(get: { photo?.caption ?? "" }, set: { value in update { $0.caption = value } })
+    }
+
+    private var note: Binding<String> {
+        Binding(get: { photo?.note ?? "" }, set: { value in update { $0.note = value } })
     }
 
     private var markersBinding: Binding<[PhotoMarker]> {
@@ -202,9 +203,9 @@ struct PhotoDetailEditor: View {
                     }
 
                     Section("Beschriftung") {
-                        TextField("z. B. Kamera 1 – Nordfassade", text: text(\.caption))
+                        TextField("z. B. Kamera 1 – Nordfassade", text: caption)
                             .frame(minHeight: 44)
-                        TextField("Notiz zum Foto", text: text(\.note), axis: .vertical)
+                        TextField("Notiz zum Foto", text: note, axis: .vertical)
                             .lineLimit(2...5)
                         Toggle("Im Kunden-PDF anzeigen", isOn: Binding(
                             get: { photo.includeInCustomerPDF },

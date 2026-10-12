@@ -189,12 +189,11 @@ struct ComparisonTableView: View {
                         }
                         ScoreBadge(score: row.score.score)
                         ForEach(OfferTier.allCases) { tier in
-                            let isChosen = analysis.variant(tier)?.manufacturer == row.manufacturer
-                            Text(row.cell(tier)?.totalInclVAT.map(Format.chf) ?? "–")
-                                .monospacedDigit()
-                                .fontWeight(isChosen ? .bold : .regular)
-                                .foregroundStyle(isChosen ? Theme.navy : .primary)
-                                .accessibilityLabel("\(tier.label): \(row.cell(tier)?.totalInclVAT.map(Format.chf) ?? "nicht verfügbar")\(isChosen ? ", gewählte Variante" : "")")
+                            ComparisonCellText(
+                                tier: tier,
+                                total: row.cell(tier)?.totalInclVAT,
+                                isChosen: analysis.variant(tier)?.manufacturer == row.manufacturer
+                            )
                         }
                         Text(row.maintenanceMonthly.map(Format.chf) ?? "–")
                             .monospacedDigit()
@@ -215,6 +214,22 @@ struct ComparisonTableView: View {
         Text(text)
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(.secondary)
+    }
+}
+
+struct ComparisonCellText: View {
+    let tier: OfferTier
+    let total: Decimal?
+    let isChosen: Bool
+
+    var body: some View {
+        let text = total.map { Format.chf($0) } ?? "–"
+        let spoken = total.map { Format.chf($0) } ?? "nicht verfügbar"
+        Text(text)
+            .monospacedDigit()
+            .fontWeight(isChosen ? .bold : .regular)
+            .foregroundStyle(isChosen ? Theme.navy : Color.primary)
+            .accessibilityLabel(isChosen ? "\(tier.label): \(spoken), gewählte Variante" : "\(tier.label): \(spoken)")
     }
 }
 
@@ -317,7 +332,7 @@ struct LineItemRow: View {
                     .font(.subheadline.monospacedDigit().weight(.semibold))
             }
             HStack {
-                Text("\(Format.number(item.quantity, fractionDigits: item.quantity == item.quantity.roundedTo(scale: 0) ? 0 : 2)) \(item.unit.label) × \(Format.chf(item.unitSellPrice))")
+                Text(item.quantityText + " × " + Format.chf(item.unitSellPrice))
                 if internalMode {
                     Text("· EK \(Format.chf(item.unitPurchasePrice)) · Marge \(Format.percent(item.marginPercent))")
                 }

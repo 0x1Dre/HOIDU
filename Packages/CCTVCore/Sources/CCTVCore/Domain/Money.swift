@@ -41,7 +41,7 @@ public extension Decimal {
         (self * 20).roundedTo(scale: 0) / 20
     }
 
-    var doubleValue: Double {
+    var asDouble: Double {
         NSDecimalNumber(decimal: self).doubleValue
     }
 

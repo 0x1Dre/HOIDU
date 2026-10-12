@@ -369,7 +369,6 @@ public enum OfferDocumentBuilder {
     }
 
     static func quantityText(_ item: OfferLineItem) -> String {
-        let decimals = item.quantity == item.quantity.roundedTo(scale: 0) ? 0 : 2
-        return "\(Format.number(item.quantity, fractionDigits: decimals)) \(item.unit.label)"
+        item.quantityText
     }
 }

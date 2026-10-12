@@ -19,11 +19,20 @@ struct CameraPositionEditorView: View {
         change(&positions[index])
     }
 
-    private func text(_ keyPath: WritableKeyPath<CameraPositionRecord, String>) -> Binding<String> {
-        Binding(
-            get: { position?[keyPath: keyPath] ?? "" },
-            set: { value in update { $0[keyPath: keyPath] = value } }
-        )
+    private var label: Binding<String> {
+        Binding(get: { position?.label ?? "" }, set: { value in update { $0.label = value } })
+    }
+
+    private var mountingHeight: Binding<String> {
+        Binding(get: { position?.mountingHeight ?? "" }, set: { value in update { $0.mountingHeight = value } })
+    }
+
+    private var viewDirection: Binding<String> {
+        Binding(get: { position?.viewDirection ?? "" }, set: { value in update { $0.viewDirection = value } })
+    }
+
+    private var note: Binding<String> {
+        Binding(get: { position?.note ?? "" }, set: { value in update { $0.note = value } })
     }
 
     private var photos: Binding<[PhotoRecord]> {
@@ -38,16 +47,16 @@ struct CameraPositionEditorView: View {
             if let position {
                 Form {
                     Section("Position") {
-                        TextField("Beschriftung, z. B. Kamera 1 – Nordfassade", text: text(\.label))
+                        TextField("Beschriftung, z. B. Kamera 1 – Nordfassade", text: label)
                             .frame(minHeight: 44)
                         if position.label.trimmingCharacters(in: .whitespaces).isEmpty {
                             FieldError(message: "Bitte eine Beschriftung erfassen.")
                         }
-                        TextField("Montagehöhe, z. B. 2.8 m unter Vordach", text: text(\.mountingHeight))
+                        TextField("Montagehöhe, z. B. 2.8 m unter Vordach", text: mountingHeight)
                             .frame(minHeight: 44)
-                        TextField("Blickrichtung, z. B. Richtung Einfahrt (Nord)", text: text(\.viewDirection))
+                        TextField("Blickrichtung, z. B. Richtung Einfahrt (Nord)", text: viewDirection)
                             .frame(minHeight: 44)
-                        TextField("Notiz, z. B. Kabelweg, Untergrund, Steckdose", text: text(\.note), axis: .vertical)
+                        TextField("Notiz, z. B. Kabelweg, Untergrund, Steckdose", text: note, axis: .vertical)
                             .lineLimit(2...6)
                     }
 

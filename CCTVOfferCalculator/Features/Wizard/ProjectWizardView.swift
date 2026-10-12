@@ -172,7 +172,7 @@ struct NewProjectView: View {
     var body: some View {
         ProjectWizardView(
             viewModel: router.newProjectWizard,
-            onSave: save,
+            onSave: { save($0) },
             onDiscard: { router.resetNewProject() }
         )
         .safeAreaInset(edge: .top) {
