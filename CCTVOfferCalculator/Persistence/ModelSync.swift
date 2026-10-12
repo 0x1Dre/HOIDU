@@ -6,7 +6,7 @@ import SwiftData
 /// So bleiben unveränderte Fotos auf der Festplatte und werden nicht neu geschrieben.
 /// Bewusst nicht an einen Actor gebunden: läuft synchron auf dem Kontext (und Actor) des Aufrufers.
 enum ModelSync {
-    static func sync<Model: PersistentModel, Record: Identifiable>(
+    nonisolated static func sync<Model: PersistentModel, Record: Identifiable>(
         _ existing: [Model],
         with records: [Record],
         context: ModelContext,
