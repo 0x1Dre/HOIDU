@@ -172,15 +172,14 @@ struct ProjectRow: View {
                 Text([project.customerName, project.siteCity].filter { !$0.isEmpty }.joined(separator: " · "))
                     .font(.brand(.subheadline))
                     .foregroundStyle(.secondary)
-                HStack(spacing: 10) {
-                    StatusBadge(status: project.status)
-                    Label("\(project.totalCameras)", systemImage: "video")
-                        .accessibilityLabel("\(project.totalCameras) Kameras")
-                    if let offer = project.latestOffer {
-                        Text(Format.chf(offer.recommendedTotal))
-                            .monospacedDigit()
+                // Passt nicht alles in eine Zeile, zuerst das Datum weglassen, dann auf zwei Zeilen verteilen.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) { statusAndCameras; price; date }
+                    HStack(spacing: 10) { statusAndCameras; price }
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 10) { statusAndCameras }
+                        HStack(spacing: 10) { price; date }
                     }
-                    Text(project.updatedAt.formatted(date: .abbreviated, time: .omitted))
                 }
                 .font(.brand(.caption))
                 .foregroundStyle(.secondary)
@@ -188,6 +187,31 @@ struct ProjectRow: View {
         }
         .padding(.vertical, 6)
         .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private var statusAndCameras: some View {
+        StatusBadge(status: project.status)
+        Label("\(project.totalCameras)", systemImage: "video")
+            .lineLimit(1)
+            .fixedSize()
+            .accessibilityLabel("\(project.totalCameras) Kameras")
+    }
+
+    @ViewBuilder
+    private var price: some View {
+        if let offer = project.latestOffer {
+            Text(Format.chf(offer.recommendedTotal))
+                .monospacedDigit()
+                .lineLimit(1)
+                .fixedSize()
+        }
+    }
+
+    private var date: some View {
+        Text(project.updatedAt.formatted(date: .abbreviated, time: .omitted))
+            .lineLimit(1)
+            .fixedSize()
     }
 }
 

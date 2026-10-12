@@ -166,6 +166,8 @@ struct StatusBadge: View {
     var body: some View {
         Text(status.label)
             .font(.brand(.caption).weight(.semibold))
+            .lineLimit(1)
+            .fixedSize()
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(Theme.color(for: status).opacity(0.15), in: RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
