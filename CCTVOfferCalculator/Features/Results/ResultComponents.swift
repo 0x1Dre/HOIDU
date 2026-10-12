@@ -350,27 +350,119 @@ struct MaintenanceOptionsView: View {
     let quotes: [MaintenanceQuote]
     @Binding var selection: MaintenanceSelection
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var scrolledID: String?
+
+    /// Karten-ID: "keine" für ohne Wartung, sonst das Paket.
+    private static let noneID = "keine"
+
+    private var selectedID: String { selection.package?.rawValue ?? Self.noneID }
+    private var cardIDs: [String] { [Self.noneID] + quotes.map(\.package.rawValue) }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "Wartung und Support", subtitle: "Monatliche Pauschale exkl. MWST", systemImage: "wrench.and.screwdriver")
-            Picker("Wartungspaket", selection: $selection.package) {
-                Text("Keine Wartung").tag(MaintenancePackage?.none)
-                ForEach(MaintenancePackage.allCases) { package in
-                    Text(package.label).tag(MaintenancePackage?.some(package))
+
+            // Wischbares Karussell: auf dem iPhone eine Karte pro Seite, auf dem iPad drei.
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(alignment: .top, spacing: 12) {
+                    NoMaintenanceCard(isSelected: selection.package == nil)
+                        .containerRelativeFrame(.horizontal, count: columns, spacing: 12)
+                        .onTapGesture { select(nil) }
+                        .id(Self.noneID)
+                    ForEach(quotes, id: \.package) { quote in
+                        MaintenanceQuoteCard(quote: quote, isSelected: selection.package == quote.package)
+                            .containerRelativeFrame(.horizontal, count: columns, spacing: 12)
+                            .onTapGesture { select(quote.package) }
+                            .id(quote.package.rawValue)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .scrollPosition(id: $scrolledID, anchor: .leading)
+            .scrollClipDisabled()
+            .onAppear { scrolledID = selectedID }
+
+            if columns == 1 {
+                PageDots(ids: cardIDs, current: scrolledID ?? selectedID) { id in
+                    withAnimation(.snappy) { scrolledID = id }
+                }
+                .frame(maxWidth: .infinity)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("Jährlicher Vor-Ort-Check", isOn: $selection.includeOnSiteCheck)
+                    .frame(minHeight: 44)
+                Text("Option bei Basic und Business, bei Premium inbegriffen.")
+                    .font(.brand(.caption))
+                    .foregroundStyle(.secondary)
+            }
+            .card()
+        }
+    }
+
+    private var columns: Int { horizontalSizeClass == .compact ? 1 : 3 }
+
+    private func select(_ package: MaintenancePackage?) {
+        withAnimation(.snappy) {
+            selection.package = package
+            scrolledID = package?.rawValue ?? Self.noneID
+        }
+    }
+}
+
+/// Karte «Keine Wartung» im Karussell.
+private struct NoMaintenanceCard: View {
+    let isSelected: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Keine Wartung").font(.brand(.headline))
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.gruen)
+                        .accessibilityLabel("gewählt")
                 }
             }
-            .pickerStyle(.segmented)
-            .controlSize(.large)
-            Toggle("Jährlicher Check vor Ort (Option bei Basic/Business)", isOn: $selection.includeOnSiteCheck)
-                .frame(minHeight: 44)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
-                ForEach(quotes, id: \.package) { quote in
-                    MaintenanceQuoteCard(quote: quote, isSelected: selection.package == quote.package)
-                        .onTapGesture { selection.package = quote.package }
-                }
+            Text(Format.chf(0) + " / Monat")
+                .font(.brand(.title3).weight(.semibold).monospacedDigit())
+            Text("Ohne Wartungsvertrag. Einsätze werden nach Aufwand verrechnet.")
+                .font(.brand(.caption))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(isSelected ? Theme.gruenSolid.opacity(0.08) : Theme.card, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+            .strokeBorder(isSelected ? Theme.gruen : Theme.separator.opacity(0.4), lineWidth: isSelected ? 2 : 0.5))
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+    }
+}
+
+/// Seitenpunkte unter einem Karussell.
+struct PageDots: View {
+    let ids: [String]
+    let current: String
+    let onSelect: (String) -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(ids, id: \.self) { id in
+                Circle()
+                    .fill(id == current ? Theme.gruenSolid : Theme.grau.opacity(0.35))
+                    .frame(width: 8, height: 8)
+                    .padding(6)
+                    .contentShape(Rectangle())
+                    .onTapGesture { onSelect(id) }
             }
         }
-        .card()
+        .accessibilityHidden(true)
     }
 }
 
@@ -404,8 +496,9 @@ struct MaintenanceQuoteCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(isSelected ? Theme.gruenSolid.opacity(0.08) : Theme.subtle.opacity(0.5), in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous).strokeBorder(isSelected ? Theme.gruen : .clear, lineWidth: 2))
+        .background(isSelected ? Theme.gruenSolid.opacity(0.08) : Theme.card, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+            .strokeBorder(isSelected ? Theme.gruen : Theme.separator.opacity(0.4), lineWidth: isSelected ? 2 : 0.5))
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
