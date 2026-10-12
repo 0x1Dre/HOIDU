@@ -6,6 +6,18 @@ Native SwiftUI-App für iPad und iPhone zur Bedarfsaufnahme von Videoüberwachun
 - Daten verlassen das Gerät nur durch eine aktive Benutzeraktion (Teilen, Exportieren, Backup).
 - Benutzeroberfläche in Deutsch (Schweiz), Beträge in CHF, MWST standardmässig 8.1 %.
 
+## Schnellstart
+
+Voraussetzung: Mac mit Xcode 16 oder neuer.
+
+1. ZIP entpacken (Doppelklick auf `CCTVOfferCalculator-CH.zip`).
+2. Im Ordner `CCTVOfferCalculator-CH` die Datei `CCTVOfferCalculator.xcodeproj` doppelklicken.
+3. In Xcode links das Projekt wählen, dann **Target CCTVOfferCalculator › Signing & Capabilities**: unter **Team** die eigene Apple-ID wählen (zuerst unter **Xcode › Einstellungen › Accounts** hinzufügen) und die **Bundle Identifier** auf eine eigene Kennung ändern, z. B. `ch.meinefirma.cctvofferte`.
+4. iPhone/iPad per Kabel verbinden, entsperren, «Vertrauen» bestätigen und auf dem Gerät den Entwicklermodus aktivieren (**Einstellungen › Datenschutz & Sicherheit › Entwicklermodus**). Oben in Xcode das Gerät als Ziel wählen.
+5. **Cmd+R** drücken. Bei einer kostenlosen Apple-ID auf dem Gerät unter **Einstellungen › Allgemein › VPN und Geräteverwaltung** dem Entwickler vertrauen.
+
+Hinweis: Das App-Target wurde in der Entwicklungsumgebung nicht mit Xcode kompiliert (nur der Rechenkern ist getestet). Falls beim ersten Build Fehlermeldungen erscheinen, diese bitte zurückmelden. Details siehe Abschnitt [Installation auf einem physischen iPad oder iPhone](#installation-auf-einem-physischen-ipad-oder-iphone).
+
 ## Funktionsumfang
 
 | Bereich | Inhalt |
