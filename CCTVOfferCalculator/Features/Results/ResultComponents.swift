@@ -428,6 +428,13 @@ struct MaintenanceOptionsView: View {
             .scrollPosition(id: $scrolledID, anchor: .leading)
             .scrollClipDisabled()
             .onAppear { scrolledID = selectedID }
+            .onChange(of: scrolledID) { _, id in
+                // iPhone: die sichtbare Karte gilt als ausgewählt.
+                guard columns == 1, let id, id != selectedID else { return }
+                withAnimation(.snappy) {
+                    apply(id == Self.noneID ? nil : MaintenancePackage(rawValue: id))
+                }
+            }
 
             if columns == 1 {
                 PageDots(ids: cardIDs, current: scrolledID ?? selectedID) { id in
@@ -469,14 +476,18 @@ struct MaintenanceOptionsView: View {
 
     private func select(_ package: MaintenancePackage?) {
         withAnimation(.snappy) {
-            selection.package = package
-            // Business und Premium: Vor-Ort-Check einschalten; ohne Wartung ausschalten.
-            switch package {
-            case .business, .premium: selection.includeOnSiteCheck = true
-            case nil: selection.includeOnSiteCheck = false
-            case .basic: break
-            }
+            apply(package)
             scrolledID = package?.rawValue ?? Self.noneID
+        }
+    }
+
+    /// Paket übernehmen. Business und Premium: Vor-Ort-Check einschalten; ohne Wartung ausschalten.
+    private func apply(_ package: MaintenancePackage?) {
+        selection.package = package
+        switch package {
+        case .business, .premium: selection.includeOnSiteCheck = true
+        case nil: selection.includeOnSiteCheck = false
+        case .basic: break
         }
     }
 }
