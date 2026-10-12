@@ -168,10 +168,10 @@ struct ScanFrameCollector: ViewModifier {
     let isActive: Bool
 
     func body(content: Content) -> some View {
-        content.task(id: isActive) { [data, isActive] in
+        content.task(id: isActive) { @MainActor [data, isActive] in
             guard isActive else { return }
             while !Task.isCancelled {
-                await data.ingestCurrentFrame()
+                data.ingestCurrentFrame()
                 try? await Task.sleep(for: .milliseconds(100))
             }
         }
