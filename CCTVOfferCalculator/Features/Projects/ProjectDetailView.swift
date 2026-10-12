@@ -149,13 +149,7 @@ struct ProjectDetailView: View {
                 ProjectHeaderCard(record: viewModel.record, latestOffer: project.latestOffer)
                 PrivacyNoticeCard(compact: true)
 
-                Picker("Bereich", selection: $tab) {
-                    ForEach(ProjectDetailTab.allCases) { tab in
-                        Text(tab.title).tag(tab)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .controlSize(.large)
+                ProjectTabBar(selection: $tab)
 
                 if let analysis = viewModel.analysis {
                     switch tab {
@@ -520,5 +514,52 @@ struct PhotoViewer: View {
         .task {
             image = photo.imageData.flatMap(UIImage.init(data:))
         }
+    }
+}
+
+/// Horizontal scrollbare Reiter mit Symbol und Titel; der gewählte Reiter wird sichtbar gehalten.
+struct ProjectTabBar: View {
+    @Binding var selection: ProjectDetailTab
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(ProjectDetailTab.allCases) { tab in
+                        let isSelected = tab == selection
+                        Button {
+                            withAnimation(.snappy) { selection = tab }
+                        } label: {
+                            Label(tab.title, systemImage: tab.systemImage)
+                                .font(.brand(.subheadline).weight(isSelected ? .semibold : .medium))
+                                .lineLimit(1)
+                                .fixedSize()
+                                .padding(.horizontal, 14)
+                                .frame(minHeight: 40)
+                                .foregroundStyle(isSelected ? Color.white : Theme.anthrazit)
+                                .background {
+                                    RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                                        .fill(isSelected ? Theme.gruenSolid : Theme.card)
+                                }
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                                        .strokeBorder(isSelected ? Color.clear : Theme.separator.opacity(0.6), lineWidth: 0.5)
+                                }
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .id(tab)
+                        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+            .scrollClipDisabled()
+            .onChange(of: selection) { _, tab in
+                withAnimation(.snappy) { proxy.scrollTo(tab, anchor: .center) }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Projektbereiche")
     }
 }
