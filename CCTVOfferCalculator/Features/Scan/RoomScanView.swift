@@ -151,6 +151,12 @@ struct RoomScanScreen: View {
                             PointsToggle(isOn: $showPoints)
                         }
                     }
+                    if controller.isScanning {
+                        HStack {
+                            Spacer()
+                            ScanCoverageMap(cloud: captureData.cloud)
+                        }
+                    }
                     Spacer()
                     bottomPanel(controller)
                 }
@@ -183,7 +189,8 @@ struct RoomScanScreen: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Label("Im Raum stehen, iPhone auf Brusthöhe halten.", systemImage: "iphone")
                     Label("Langsam die Wände entlang schwenken, auch Ecken, Türen und Fenster.", systemImage: "arrow.triangle.turn.up.right.circle")
-                    Label("Grüne Punkte zeigen, was schon erfasst ist.", systemImage: "circle.grid.3x3.fill")
+                    Label("Grüne Punkte sind erfasst, orange Punkte nochmals anschauen.", systemImage: "circle.grid.3x3.fill")
+                    Label("Die Karte oben rechts zeigt von oben, welche Wände noch fehlen.", systemImage: "map")
                 }
                 .font(.brand(.subheadline))
                 Button {
@@ -198,9 +205,10 @@ struct RoomScanScreen: View {
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
         case .scanning:
             VStack(spacing: 10) {
-                Text("Langsam weiterschwenken, bis alle Wände erfasst sind.")
+                Text("Langsam weiterschwenken, bis alle Wände grün sind und die Karte keine Lücken mehr hat.")
                     .font(.brand(.subheadline))
                     .multilineTextAlignment(.center)
+                if showPoints { ScanPointLegend() }
                 Button {
                     controller.finish()
                 } label: {

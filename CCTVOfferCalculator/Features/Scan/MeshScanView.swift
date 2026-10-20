@@ -37,12 +37,15 @@ final class MeshScanController {
             configuration.frameSemantics.insert(.sceneDepth)
         }
         arView.renderOptions.insert(.disableMotionBlur)
+        // Erfasstes Netz live über dem Kamerabild zeigen (Knoten und Kanten, verdeckt von Wänden)
+        arView.debugOptions.insert(.showSceneUnderstanding)
         arView.session.delegate = delegateProxy
         arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
         meshAnchorCount = 0
     }
 
     func stop() {
+        arView.debugOptions.remove(.showSceneUnderstanding)
         arView.session.pause()
     }
 
@@ -171,7 +174,8 @@ struct MeshScanScreen: View {
     @State private var controller: MeshScanController?
     @State private var isRunning = false
     @State private var captureData = ScanCaptureData()
-    @State private var showPoints = true
+    /// Das Netz zeigt die Erfassung bereits; Punkte sind zusätzlich zuschaltbar.
+    @State private var showPoints = false
     @State private var isSaving = false
     @State private var errorMessage: String?
 
@@ -200,6 +204,12 @@ struct MeshScanScreen: View {
                         if isRunning {
                             PointCountBadge(cloud: captureData.cloud)
                             PointsToggle(isOn: $showPoints)
+                        }
+                    }
+                    if isRunning {
+                        HStack {
+                            Spacer()
+                            ScanCoverageMap(cloud: captureData.cloud)
                         }
                     }
                     if isRunning, let hint = controller.trackingHint {
@@ -237,9 +247,10 @@ struct MeshScanScreen: View {
     private func bottomPanel(_ controller: MeshScanController) -> some View {
         if isRunning {
             VStack(spacing: 10) {
-                Text("Langsam über Boden, Wände und Objekte schwenken. Abstand höchstens 5 m.")
+                Text("Langsam über Boden, Wände und Objekte schwenken, bis alles vom Netz bedeckt ist. Abstand höchstens 5 m.")
                     .font(.brand(.subheadline))
                     .multilineTextAlignment(.center)
+                if showPoints { ScanPointLegend() }
                 Button {
                     save(controller)
                 } label: {
@@ -257,7 +268,8 @@ struct MeshScanScreen: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Label("Funktioniert auch draussen, Reichweite rund 5 m.", systemImage: "sun.max")
                     Label("Langsam gehen und das iPhone ruhig über Boden, Fassade und Objekte führen.", systemImage: "figure.walk")
-                    Label("Grüne Punkte zeigen, was schon erfasst ist.", systemImage: "circle.grid.3x3.fill")
+                    Label("Das Netz zeigt, was schon erfasst ist. Stellen ohne Netz fehlen noch.", systemImage: "circle.grid.3x3.fill")
+                    Label("Die Karte oben rechts zeigt die erfasste Fläche von oben.", systemImage: "map")
                 }
                 .font(.brand(.subheadline))
                 Button {

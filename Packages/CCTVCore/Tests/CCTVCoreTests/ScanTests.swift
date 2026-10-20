@@ -154,21 +154,20 @@ final class ScanTests: XCTestCase {
         XCTAssertEqual(file.project.scans[0].photoPoses.count, 1)
     }
 
-    func testCustomerOfferShowsOnlyReleasedScanPhotos() {
+    func testScanPhotosStayOutOfOffer() {
         let project = projectWithScanPhotos()
         let analysis = OfferVariantBuilder.analyze(project: project, catalog: Fixtures.catalog, settings: Fixtures.settings)
-        func photos(_ audience: DocumentAudience, include: Bool) -> [String] {
+        for audience in [DocumentAudience.customer, .internal] {
             let document = OfferDocumentBuilder.build(project: project, analysis: analysis, company: CompanyProfile(),
-                                                      options: DocumentOptions(audience: audience, offerNumber: "1", includePhotosInCustomerPDF: include))
-            let section = document.sections.first { $0.title == "Grundriss und Kamerastandorte" }
-            return section?.blocks.flatMap { block -> [String] in
+                                                      options: DocumentOptions(audience: audience, offerNumber: "1", includePhotosInCustomerPDF: true))
+            let titles = document.sections.flatMap(\.blocks).flatMap { block -> [String] in
                 if case .photos(let photos) = block { return photos.map(\.title) }
                 return []
-            } ?? []
+            }
+            XCTAssertFalse(titles.contains("Aufnahme 1"))
+            XCTAssertFalse(titles.contains("Intern"))
+            XCTAssertNotNil(document.sections.first { $0.title == "Grundriss und Kamerastandorte" })
         }
-        XCTAssertEqual(photos(.customer, include: true), ["Aufnahme 1"])
-        XCTAssertEqual(photos(.customer, include: false), [])
-        XCTAssertEqual(photos(.internal, include: false), ["Aufnahme 1", "Intern"])
     }
 
     func testOfferWithoutFloorPlanHasNoSection() {

@@ -40,7 +40,7 @@ public enum OfferDocumentBuilder {
         if let positions = positionsSection(project, audience: options.audience, includeCustomerPhotos: options.includePhotosInCustomerPDF) {
             sections.append(positions)
         }
-        if let floorPlans = floorPlanSection(project, audience: options.audience, includeCustomerPhotos: options.includePhotosInCustomerPDF) {
+        if let floorPlans = floorPlanSection(project) {
             sections.append(floorPlans)
         }
         if let hints = hintsSection(analysis, isInternal: isInternal) {
@@ -315,24 +315,12 @@ public enum OfferDocumentBuilder {
     }
 
     /// Grundrisse aus den 3D-Scans mit nummerierten Kameras und Blickfeldern.
-    static func floorPlanSection(_ project: ProjectRecord, audience: DocumentAudience = .internal, includeCustomerPhotos: Bool = true) -> DocumentSection? {
-        let showPhotos = audience == .internal || includeCustomerPhotos
+    /// Die Fotos eines Scans gehören zum 3D-Modell und erscheinen nicht in der Offerte.
+    static func floorPlanSection(_ project: ProjectRecord) -> DocumentSection? {
         var blocks: [DocumentBlock] = []
         var number = 0
         for scan in project.scans {
-            let scanPhotos: [DocumentPhoto] = showPhotos ? scan.photos.compactMap { photo in
-                guard let data = photo.imageData, !data.isEmpty else { return nil }
-                if audience == .customer && !photo.includeInCustomerPDF { return nil }
-                let title = photo.caption.trimmingCharacters(in: .whitespaces).isEmpty ? scan.displayName : photo.caption
-                return DocumentPhoto(id: photo.id, title: title, details: photo.note.isEmpty ? [] : [photo.note], imageData: data, markers: photo.markers)
-            } : []
-            guard let plan = scan.floorPlan, !plan.imageData.isEmpty else {
-                if !scanPhotos.isEmpty {
-                    blocks.append(.paragraph("Fotos «\(scan.displayName)»"))
-                    blocks.append(.photos(scanPhotos))
-                }
-                continue
-            }
+            guard let plan = scan.floorPlan, !plan.imageData.isEmpty else { continue }
             var markers: [DocumentFloorPlanMarker] = []
             var rows: [[String]] = []
             for placement in scan.placements {
@@ -370,9 +358,6 @@ public enum OfferDocumentBuilder {
                     ],
                     rows: rows
                 )))
-            }
-            if !scanPhotos.isEmpty {
-                blocks.append(.photos(scanPhotos))
             }
         }
         guard !blocks.isEmpty else { return nil }
