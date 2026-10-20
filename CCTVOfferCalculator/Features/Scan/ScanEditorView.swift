@@ -40,6 +40,7 @@ struct ScanEditorView: View {
     @State private var didLoad = false
     @State private var confirmDelete = false
     @State private var showRename = false
+    @State private var showPlacementDetails = false
 
     private enum Mode: String, CaseIterable, Identifiable {
         case model, plan, photos
@@ -95,6 +96,7 @@ struct ScanEditorView: View {
                 }
             }
             .background(Theme.background)
+            .overlay(alignment: .bottom) { placementPanel }
             .navigationTitle(name.isEmpty ? (scan?.kind.label ?? "3D-Scan") : name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -121,19 +123,21 @@ struct ScanEditorView: View {
                     }
                 }
             }
-            .sheet(item: selectedBinding) { item in
-                PlacementEditor(
-                    placement: binding(for: item.id),
-                    number: numbers[item.id] ?? 0,
-                    positions: project.allPositions,
-                    onDelete: {
-                        placements.removeAll { $0.id == item.id }
-                        selectedID = nil
-                    }
-                )
-                .presentationDetents([.height(320), .medium, .large])
-                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-                .presentationDragIndicator(.visible)
+            .sheet(isPresented: $showPlacementDetails) {
+                if let id = selectedID, placements.contains(where: { $0.id == id }) {
+                    PlacementEditor(
+                        placement: binding(for: id),
+                        number: numbers[id] ?? 0,
+                        positions: project.allPositions,
+                        onDelete: {
+                            placements.removeAll { $0.id == id }
+                            selectedID = nil
+                            showPlacementDetails = false
+                        }
+                    )
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+                }
             }
             .alert("Scan umbenennen", isPresented: $showRename) {
                 TextField("Name", text: $name)
@@ -178,6 +182,7 @@ struct ScanEditorView: View {
             }
         }
         .onChange(of: placements) { _, _ in scheduleSave() }
+        .animation(.easeOut(duration: 0.2), value: selectedID)
         .onChange(of: name) { _, _ in scheduleSave() }
         .onChange(of: photos) { _, _ in scheduleSave() }
         .onChange(of: areaID) { _, _ in scheduleSave() }
@@ -214,6 +219,7 @@ struct ScanEditorView: View {
                     }
                 }
 
+                if selectedID == nil {
                 VStack(spacing: 8) {
                     if isPlacing {
                         Label("Tippen Sie auf die Wand oder Stelle, an der die Kamera montiert wird.", systemImage: "hand.tap")
@@ -232,6 +238,7 @@ struct ScanEditorView: View {
                     .buttonStyle(.primaryAction)
                 }
                 .padding()
+                }
             }
         } else if let loadError {
             ContentUnavailableView("Kein 3D-Modell", systemImage: "cube.transparent", description: Text(loadError))
@@ -296,6 +303,8 @@ struct ScanEditorView: View {
             }
             .padding()
         }
+        // Platz für die Drehknöpfe, wenn eine Kamera gewählt ist
+        .contentMargins(.bottom, selectedID == nil ? 0 : 230, for: .scrollContent)
         .onChange(of: note) { _, _ in scheduleSave() }
     }
 
@@ -391,11 +400,19 @@ struct ScanEditorView: View {
 
     // MARK: - Aktionen
 
-    private var selectedBinding: Binding<SelectedPlacement?> {
-        Binding(
-            get: { selectedID.flatMap { id in placements.contains { $0.id == id } ? SelectedPlacement(id: id) : nil } },
-            set: { selectedID = $0?.id }
-        )
+    /// Drehknöpfe der gewählten Kamera, halbtransparent über dem Modell bzw. Grundriss.
+    @ViewBuilder
+    private var placementPanel: some View {
+        if mode != .photos, !isPlacing, let id = selectedID, placements.contains(where: { $0.id == id }) {
+            let number = numbers[id] ?? 0
+            PlacementControlPanel(
+                placement: binding(for: id),
+                title: markers.first { $0.number == number }?.label ?? "Kamera \(number)",
+                onDetails: { showPlacementDetails = true },
+                onDone: { selectedID = nil }
+            )
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
     }
 
     private func binding(for id: UUID) -> Binding<ScanCameraPlacement> {
@@ -463,10 +480,6 @@ struct ScanEditorView: View {
     }
 }
 
-private struct SelectedPlacement: Identifiable {
-    let id: UUID
-}
-
 /// Einstellungen einer platzierten Kamera.
 struct PlacementEditor: View {
     @Binding var placement: ScanCameraPlacement
@@ -498,16 +511,6 @@ struct PlacementEditor: View {
                     }
                 }
 
-                Section("Ausrichtung") {
-                    slider("Blickrichtung", value: $placement.yawDegrees, range: 0...359, step: 1, unit: "°")
-                    slider("Neigung nach unten", value: $placement.tiltDegrees, range: 0...90, step: 1, unit: "°")
-                }
-
-                Section("Blickfeld") {
-                    slider("Öffnungswinkel", value: $placement.fieldOfViewDegrees, range: 20...180, step: 5, unit: "°")
-                    slider("Reichweite", value: $placement.rangeMeters, range: 2...40, step: 1, unit: " m")
-                }
-
                 Section {
                     Stepper(value: $placement.y, step: 0.1) {
                         LabeledContent("Höhe im Modell", value: Format.number(placement.y, fractionDigits: 1) + " m")
@@ -534,18 +537,171 @@ struct PlacementEditor: View {
             }
         }
     }
+}
 
-    private func slider(_ title: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double, unit: String, fractionDigits: Int = 0) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
+/// Einstellungen der gewählten Kamera direkt über dem Modell. Drehknöpfe statt Schieberegler und
+/// ein halbtransparenter Hintergrund, damit das Blickfeld beim Einstellen sichtbar bleibt.
+struct PlacementControlPanel: View {
+    @Binding var placement: ScanCameraPlacement
+    let title: String
+    let onDetails: () -> Void
+    let onDone: () -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
                 Text(title)
+                    .font(.brand(.headline))
+                    .foregroundStyle(Theme.anthrazit)
+                    .lineLimit(1)
                 Spacer()
-                Text(Format.number(value.wrappedValue, fractionDigits: fractionDigits) + unit)
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                Button(action: onDetails) {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 17, weight: .semibold))
+                        .frame(width: 40, height: 40)
+                }
+                .accessibilityLabel("Verknüpfung, Höhe und Entfernen")
+                Button("Fertig", action: onDone)
+                    .font(.brand(.headline))
+                    .frame(minHeight: 40)
             }
-            Slider(value: value, in: range, step: step)
-                .accessibilityLabel(title)
+            .foregroundStyle(Theme.gruen)
+
+            HStack(alignment: .top, spacing: 4) {
+                RotaryKnob(title: "Richtung", value: $placement.yawDegrees, range: 0...359, step: 1, unit: "°", perTurn: 360, wraps: true)
+                RotaryKnob(title: "Neigung", value: $placement.tiltDegrees, range: 0...90, step: 1, unit: "°", perTurn: 180)
+                RotaryKnob(title: "Winkel", value: $placement.fieldOfViewDegrees, range: 20...180, step: 5, unit: "°", perTurn: 320)
+                RotaryKnob(title: "Reichweite", value: $placement.rangeMeters, range: 2...40, step: 1, unit: " m", perTurn: 40)
+            }
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+        .padding(.horizontal, 10)
+        .padding(.bottom, 6)
+    }
+}
+
+/// Drehknopf: mit dem Finger im Kreis drehen. Bei der Blickrichtung zeigt der Zeiger
+/// direkt die Himmelsrichtung im Modell (0° = oben), sonst den Anteil am Bereich.
+struct RotaryKnob: View {
+    let title: String
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    let step: Double
+    let unit: String
+    /// Wertänderung bei einer vollen Umdrehung des Fingers.
+    let perTurn: Double
+    /// Nach dem Höchstwert wieder bei null beginnen (Blickrichtung).
+    var wraps = false
+
+    @State private var rawValue: Double?
+    @State private var lastAngle: Double?
+
+    private var fraction: Double {
+        let span = range.upperBound - range.lowerBound
+        guard span > 0 else { return 0 }
+        return min(1, max(0, (value - range.lowerBound) / span))
+    }
+
+    private var pointerDegrees: Double { wraps ? value : -135 + 270 * fraction }
+
+    var body: some View {
+        VStack(spacing: 3) {
+            GeometryReader { geometry in
+                let side = min(geometry.size.width, geometry.size.height)
+                let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                ZStack {
+                    Circle().fill(Color.black.opacity(0.25))
+                    if wraps {
+                        Circle().stroke(Color.white.opacity(0.45), lineWidth: 2)
+                        ForEach(0..<4) { index in
+                            Capsule()
+                                .fill(Color.white.opacity(0.55))
+                                .frame(width: 2, height: 5)
+                                .offset(y: -side / 2 + 5)
+                                .rotationEffect(.degrees(Double(index) * 90))
+                        }
+                    } else {
+                        Circle()
+                            .trim(from: 0, to: 0.75)
+                            .stroke(Color.white.opacity(0.35), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                            .rotationEffect(.degrees(135))
+                            .padding(3)
+                        Circle()
+                            .trim(from: 0, to: 0.75 * fraction)
+                            .stroke(Theme.sonne, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                            .rotationEffect(.degrees(135))
+                            .padding(3)
+                    }
+                    Capsule()
+                        .fill(Theme.sonne)
+                        .frame(width: 4, height: side * 0.3)
+                        .offset(y: -side * 0.2)
+                        .rotationEffect(.degrees(pointerDegrees))
+                    Circle().fill(Color.white).frame(width: 8, height: 8)
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { drag in
+                            let dx = Double(drag.location.x - center.x)
+                            let dy = Double(drag.location.y - center.y)
+                            // Nahe der Mitte ist der Winkel unruhig.
+                            guard dx * dx + dy * dy > 64 else { return }
+                            let angle = atan2(dy, dx) * 180 / .pi
+                            if let lastAngle {
+                                var delta = angle - lastAngle
+                                if delta > 180 { delta -= 360 } else if delta < -180 { delta += 360 }
+                                var next = (rawValue ?? value) + delta / 360 * perTurn
+                                if !wraps { next = min(range.upperBound, max(range.lowerBound, next)) }
+                                rawValue = next
+                                apply(next)
+                            }
+                            lastAngle = angle
+                        }
+                        .onEnded { _ in
+                            rawValue = nil
+                            lastAngle = nil
+                        }
+                )
+            }
+            .frame(width: 60, height: 60)
+
+            Text(title)
+                .font(.brand(.caption))
+                .foregroundStyle(Theme.grau)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Text(Format.number(value, fractionDigits: 0) + unit)
+                .font(.brand(.subheadline).monospacedDigit())
+                .fontWeight(.semibold)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
+        .sensoryFeedback(.selection, trigger: Int((value / (wraps ? 15 : max(step, (range.upperBound - range.lowerBound) / 18))).rounded(.down)))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(Format.number(value, fractionDigits: 0) + unit)
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: apply(value + step)
+            case .decrement: apply(value - step)
+            @unknown default: break
+            }
+        }
+    }
+
+    private func apply(_ candidate: Double) {
+        var next = (candidate / step).rounded() * step
+        if wraps {
+            next = next.truncatingRemainder(dividingBy: 360)
+            if next < 0 { next += 360 }
+            if next >= 359.5 { next = 0 }
+        } else {
+            next = min(range.upperBound, max(range.lowerBound, next))
+        }
+        if next != value { value = next }
     }
 }

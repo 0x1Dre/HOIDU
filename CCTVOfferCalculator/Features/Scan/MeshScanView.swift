@@ -226,7 +226,7 @@ struct MeshScanScreen: View {
             }
 
             if isSaving {
-                ProgressView("Modell und Farben werden erstellt …")
+                ProgressView("Modell wird erstellt …")
                     .padding(24)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             }
@@ -296,6 +296,7 @@ struct MeshScanScreen: View {
         isSaving = true
         let collected = controller.collectMesh()
         let keyframes = captureData.keyframes.keyframes
+        let textured = keyframes.filter(\.hasTexture)
         controller.stop()
         isRunning = false
         Task { @MainActor in
@@ -303,10 +304,10 @@ struct MeshScanScreen: View {
             do {
                 var mesh = collected
                 guard !mesh.isEmpty else { throw ScanError.emptyScan }
-                if !keyframes.isEmpty {
+                if !textured.isEmpty {
                     let vertices = mesh.vertices, normals = mesh.normals
                     mesh.colors = await Task.detached(priority: .userInitiated) {
-                        ScanTexturing.vertexColors(vertices: vertices, normals: normals, sampler: KeyframeSampler(keyframes: keyframes))
+                        ScanTexturing.vertexColors(vertices: vertices, normals: normals, sampler: KeyframeSampler(keyframes: textured))
                     }.value
                 }
                 let data = try ScanModelFile.data(from: mesh.makeScene())

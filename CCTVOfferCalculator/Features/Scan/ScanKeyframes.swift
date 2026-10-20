@@ -7,7 +7,7 @@ import simd
 /// Kamerabild mit Lage im Raum, aufgenommen während des Scans.
 /// Dient zum Einfärben des Modells (Texturen) und als Foto zum Scan.
 struct ScanKeyframe: Sendable {
-    /// Bild für Texturen in Sensor-Ausrichtung (Querformat), RGBA.
+    /// Bild für Texturen in Sensor-Ausrichtung (Querformat), RGBA. Leer, wenn keine Texturen erstellt werden.
     let width: Int
     let height: Int
     let pixels: [UInt8]
@@ -24,7 +24,10 @@ struct ScanKeyframe: Sendable {
     let jpeg: Data
 
     /// Bildpunkt eines Weltpunkts und Abstand vor der Kamera; `nil`, wenn ausserhalb des Bilds.
+    var hasTexture: Bool { !pixels.isEmpty && width > 2 && height > 2 }
+
     func project(_ point: SIMD3<Float>) -> (u: Float, v: Float, distance: Float)? {
+        guard hasTexture else { return nil }
         let c = worldToCamera * SIMD4<Float>(point.x, point.y, point.z, 1)
         let distance = -c.z
         guard distance > 0.1 else { return nil }
@@ -53,12 +56,16 @@ struct ScanKeyframe: Sendable {
 /// Wählt während des Scans laufend neue Aufnahmen aus (Ortswechsel oder neuer Blickwinkel).
 @MainActor
 final class ScanKeyframeRecorder {
-    let maxKeyframes = 40
+    /// Fotos auf das Modell legen (Texturen). Aus: schneller, und das Modell bleibt sauber
+    /// ohne fleckige Stellen. Die Aufnahmen dienen dann nur noch als Fotos im 3D-Modell.
+    nonisolated static let capturesTextures = false
+
+    let maxKeyframes = ScanKeyframeRecorder.capturesTextures ? 40 : 24
     private(set) var keyframes: [ScanKeyframe] = []
     private var lastCapture: TimeInterval = 0
     private let context = CIContext(options: [.cacheIntermediates: false])
     private let textureWidth: CGFloat = 640
-    private let photoMaxDimension: CGFloat = 1600
+    private let photoMaxDimension: CGFloat = 1024
 
     func reset() {
         keyframes.removeAll()
@@ -86,6 +93,25 @@ final class ScanKeyframeRecorder {
         let image = CIImage(cvPixelBuffer: frame.capturedImage)
         let extent = image.extent
         guard extent.width > 0 else { return nil }
+
+        // Aufrechtes Foto in reduzierter Qualität
+        let photoScale = min(1, photoMaxDimension / max(extent.width, extent.height))
+        let upright = image
+            .transformed(by: CGAffineTransform(scaleX: photoScale, y: photoScale))
+            .oriented(Self.imageOrientation(for: orientation))
+        guard let photoImage = context.createCGImage(upright, from: upright.extent),
+              let jpeg = UIImage(cgImage: photoImage).jpegData(compressionQuality: 0.6) else { return nil }
+
+        guard Self.capturesTextures else {
+            return ScanKeyframe(
+                width: 0, height: 0, pixels: [],
+                depth: nil, depthWidth: 0, depthHeight: 0,
+                fx: 1, fy: 1, cx: 0, cy: 0,
+                worldToCamera: frame.camera.transform.inverse,
+                position: position, forward: forward,
+                jpeg: jpeg
+            )
+        }
 
         // Texturbild in Sensor-Ausrichtung
         let scale = textureWidth / extent.width
@@ -131,14 +157,6 @@ final class ScanKeyframeRecorder {
         let resolution = frame.camera.imageResolution
         let sx = Float(width) / Float(resolution.width)
         let sy = Float(height) / Float(resolution.height)
-
-        // Aufrechtes Foto
-        let photoScale = min(1, photoMaxDimension / max(extent.width, extent.height))
-        let upright = image
-            .transformed(by: CGAffineTransform(scaleX: photoScale, y: photoScale))
-            .oriented(Self.imageOrientation(for: orientation))
-        guard let photoImage = context.createCGImage(upright, from: upright.extent),
-              let jpeg = UIImage(cgImage: photoImage).jpegData(compressionQuality: 0.72) else { return nil }
 
         return ScanKeyframe(
             width: width, height: height, pixels: pixels,

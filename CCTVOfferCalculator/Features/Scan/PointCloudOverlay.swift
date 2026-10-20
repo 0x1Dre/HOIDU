@@ -231,40 +231,52 @@ struct PointCloudOverlay: View {
     static let unsureColor = Color(uiColor: OstsichtColor.sonne)
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0)) { _ in
-            Canvas { context, size in
-                guard let frame = session.currentFrame else { return }
-                let orientation = InterfaceOrientation.current
-                let camera = frame.camera
-                let projection = camera.projectionMatrix(for: orientation, viewportSize: size, zNear: 0.05, zFar: 50)
-                let matrix = projection * camera.viewMatrix(for: orientation)
-                let occlusion = DepthOcclusion(frame: frame)
-                let points = cloud.points
-                let hits = cloud.hits
-
-                var confident = Path()
-                var unsure = Path()
-                for i in points.indices {
-                    let point = points[i]
-                    let clip = matrix * SIMD4<Float>(point.x, point.y, point.z, 1)
-                    guard clip.w > 0.1 else { continue }
-                    let ndcX = clip.x / clip.w
-                    let ndcY = clip.y / clip.w
-                    guard abs(ndcX) <= 1, abs(ndcY) <= 1 else { continue }
-                    if let occlusion, occlusion.hides(point) { continue }
-                    let x = CGFloat(ndcX + 1) / 2 * size.width
-                    let y = CGFloat(1 - ndcY) / 2 * size.height
-                    // Nahe Punkte etwas grösser, damit Tiefe erkennbar bleibt.
-                    let dot: CGFloat = clip.w < 1.5 ? 4 : 3
-                    let rect = CGRect(x: x - dot / 2, y: y - dot / 2, width: dot, height: dot)
-                    if hits[i] >= ScanPointCloud.confidentHits { confident.addRect(rect) } else { unsure.addRect(rect) }
-                }
-                context.fill(confident, with: .color(Self.confidentColor))
-                context.fill(unsure, with: .color(Self.unsureColor))
-            }
+        // Der Zeitstempel zwingt die Zeichenfläche zum Neuzeichnen; ohne ihn bleibt sie leer.
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0)) { timeline in
+            PointCloudCanvas(session: session, cloud: cloud, tick: timeline.date)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+private struct PointCloudCanvas: View {
+    let session: ARSession
+    let cloud: ScanPointCloud
+    let tick: Date
+
+    var body: some View {
+        Canvas { context, size in
+            _ = tick
+            guard let frame = session.currentFrame else { return }
+            let orientation = InterfaceOrientation.current
+            let camera = frame.camera
+            let projection = camera.projectionMatrix(for: orientation, viewportSize: size, zNear: 0.05, zFar: 50)
+            let matrix = projection * camera.viewMatrix(for: orientation)
+            let occlusion = DepthOcclusion(frame: frame)
+            let points = cloud.points
+            let hits = cloud.hits
+
+            var confident = Path()
+            var unsure = Path()
+            for i in points.indices {
+                let point = points[i]
+                let clip = matrix * SIMD4<Float>(point.x, point.y, point.z, 1)
+                guard clip.w > 0.1 else { continue }
+                let ndcX = clip.x / clip.w
+                let ndcY = clip.y / clip.w
+                guard abs(ndcX) <= 1, abs(ndcY) <= 1 else { continue }
+                if let occlusion, occlusion.hides(point) { continue }
+                let x = CGFloat(ndcX + 1) / 2 * size.width
+                let y = CGFloat(1 - ndcY) / 2 * size.height
+                // Nahe Punkte etwas grösser, damit Tiefe erkennbar bleibt.
+                let dot: CGFloat = clip.w < 1.5 ? 4 : 3
+                let rect = CGRect(x: x - dot / 2, y: y - dot / 2, width: dot, height: dot)
+                if hits[i] >= ScanPointCloud.confidentHits { confident.addRect(rect) } else { unsure.addRect(rect) }
+            }
+            context.fill(confident, with: .color(PointCloudOverlay.confidentColor))
+            context.fill(unsure, with: .color(PointCloudOverlay.unsureColor))
+        }
     }
 }
 
@@ -276,45 +288,8 @@ struct ScanCoverageMap: View {
     var radius: Float = 5
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 0.25)) { _ in
-            Canvas { context, size in
-                let center = CGPoint(x: size.width / 2, y: size.height / 2)
-                let scale = min(size.width, size.height) / 2 / CGFloat(radius)
-                let cell = CGFloat(cloud.columnSize) * scale
-
-                if let device = cloud.devicePosition {
-                    // Drehen, damit die Blickrichtung nach oben zeigt (Bildschirm: x rechts, y = z nach unten).
-                    let rotation = -Float.pi / 2 - cloud.deviceHeading
-                    let cosR = cos(rotation), sinR = sin(rotation)
-                    let limit = radius * 1.5
-                    var floor = Path()
-                    var walls = Path()
-                    for (key, count) in cloud.columns {
-                        let column = ScanPointCloud.column(from: key)
-                        let dx = (Float(column.x) + 0.5) * cloud.columnSize - device.x
-                        let dz = (Float(column.z) + 0.5) * cloud.columnSize - device.z
-                        guard abs(dx) < limit, abs(dz) < limit else { continue }
-                        let rx = dx * cosR - dz * sinR
-                        let ry = dx * sinR + dz * cosR
-                        let x = center.x + CGFloat(rx) * scale
-                        let y = center.y + CGFloat(ry) * scale
-                        let rect = CGRect(x: x - cell / 2, y: y - cell / 2, width: cell + 0.6, height: cell + 0.6)
-                        if count >= ScanPointCloud.wallColumnPoints { walls.addRect(rect) } else { floor.addRect(rect) }
-                    }
-                    context.fill(floor, with: .color(PointCloudOverlay.confidentColor.opacity(0.45)))
-                    context.fill(walls, with: .color(.white))
-                }
-
-                // Gerät mit Blickrichtung
-                var cone = Path()
-                cone.move(to: center)
-                cone.addLine(to: CGPoint(x: center.x - 16, y: center.y - 30))
-                cone.addLine(to: CGPoint(x: center.x + 16, y: center.y - 30))
-                cone.closeSubpath()
-                context.fill(cone, with: .color(PointCloudOverlay.unsureColor.opacity(0.45)))
-                context.fill(Path(ellipseIn: CGRect(x: center.x - 5, y: center.y - 5, width: 10, height: 10)),
-                             with: .color(PointCloudOverlay.unsureColor))
-            }
+        TimelineView(.periodic(from: .now, by: 0.25)) { timeline in
+            CoverageMapCanvas(cloud: cloud, radius: radius, tick: timeline.date)
         }
         .frame(width: 136, height: 136)
         .background(Color.black.opacity(0.55))
@@ -327,6 +302,54 @@ struct ScanCoverageMap: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
         .allowsHitTesting(false)
         .accessibilityLabel("Karte der erfassten Fläche von oben")
+    }
+}
+
+private struct CoverageMapCanvas: View {
+    let cloud: ScanPointCloud
+    let radius: Float
+    let tick: Date
+
+    var body: some View {
+        Canvas { context, size in
+            _ = tick
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let scale = min(size.width, size.height) / 2 / CGFloat(radius)
+            let cell = CGFloat(cloud.columnSize) * scale
+
+            if let device = cloud.devicePosition {
+                // Drehen, damit die Blickrichtung nach oben zeigt (Bildschirm: x rechts, y = z nach unten).
+                let rotation = -Float.pi / 2 - cloud.deviceHeading
+                let cosR = cos(rotation), sinR = sin(rotation)
+                let limit = radius * 1.5
+                var floor = Path()
+                var walls = Path()
+                for (key, count) in cloud.columns {
+                    let column = ScanPointCloud.column(from: key)
+                    let dx = (Float(column.x) + 0.5) * cloud.columnSize - device.x
+                    let dz = (Float(column.z) + 0.5) * cloud.columnSize - device.z
+                    guard abs(dx) < limit, abs(dz) < limit else { continue }
+                    let rx = dx * cosR - dz * sinR
+                    let ry = dx * sinR + dz * cosR
+                    let x = center.x + CGFloat(rx) * scale
+                    let y = center.y + CGFloat(ry) * scale
+                    let rect = CGRect(x: x - cell / 2, y: y - cell / 2, width: cell + 0.6, height: cell + 0.6)
+                    if count >= ScanPointCloud.wallColumnPoints { walls.addRect(rect) } else { floor.addRect(rect) }
+                }
+                context.fill(floor, with: .color(PointCloudOverlay.confidentColor.opacity(0.45)))
+                context.fill(walls, with: .color(.white))
+            }
+
+            // Gerät mit Blickrichtung
+            var cone = Path()
+            cone.move(to: center)
+            cone.addLine(to: CGPoint(x: center.x - 16, y: center.y - 30))
+            cone.addLine(to: CGPoint(x: center.x + 16, y: center.y - 30))
+            cone.closeSubpath()
+            context.fill(cone, with: .color(PointCloudOverlay.unsureColor.opacity(0.45)))
+            context.fill(Path(ellipseIn: CGRect(x: center.x - 5, y: center.y - 5, width: 10, height: 10)),
+                         with: .color(PointCloudOverlay.unsureColor))
+        }
     }
 }
 

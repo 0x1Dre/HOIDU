@@ -164,7 +164,7 @@ struct RoomScanScreen: View {
             }
 
             if isSaving {
-                ProgressView("Modell und Texturen werden erstellt …")
+                ProgressView("Modell wird erstellt …")
                     .padding(24)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             }
@@ -295,9 +295,13 @@ enum RoomModelBuilder {
 
     static func record(from room: CapturedRoom, keyframes: [ScanKeyframe]) async throws -> SiteScanRecord {
         guard !room.walls.isEmpty else { throw ScanError.emptyScan }
-        let textures = await Task.detached(priority: .userInitiated) {
-            computeTextures(room: room, keyframes: keyframes)
-        }.value
+        let textured = keyframes.filter(\.hasTexture)
+        var textures = RoomTextures()
+        if !textured.isEmpty {
+            textures = await Task.detached(priority: .userInitiated) {
+                computeTextures(room: room, keyframes: textured)
+            }.value
+        }
         let scene = makeScene(room, textures: textures)
         let data = try ScanModelFile.data(from: scene)
         let photos = ScanTexturing.photos(from: keyframes)
