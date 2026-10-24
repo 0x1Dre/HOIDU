@@ -1,4 +1,4 @@
-/* Ostsicht – kleine Helfer: Kopfzeile, Jahr, Kontaktformular */
+/* Ostsicht – kleine Helfer: Kopfzeile, Jahr, Anfrage per E-Mail vorbereiten */
 (function () {
   "use strict";
 
@@ -16,19 +16,13 @@
   var formular = document.getElementById("formular");
   if (!formular) return;
 
+  var EMPFAENGER = "info@ostsicht.ch";
   var status = document.getElementById("formular-status");
-  var knopf = formular.querySelector("button[type=submit]");
-  var gestartet = document.getElementById("gestartet");
-  if (gestartet) gestartet.value = String(Math.floor(Date.now() / 1000));
-
-  // Rückmeldung nach Versand ohne JavaScript (contact.php leitet mit ?anfrage=… zurück)
-  var parameter = new URLSearchParams(window.location.search);
-  if (parameter.get("anfrage") === "gesendet") zeigeStatus("Danke! Ihre Anfrage ist bei uns angekommen. Wir melden uns in der Regel innert zwei Arbeitstagen.", true);
-  if (parameter.get("anfrage") === "fehler") zeigeStatus("Die Anfrage konnte nicht gesendet werden. Bitte schreiben Sie uns direkt an info@ostsicht.ch.", false);
+  var kopieren = document.getElementById("kopieren");
+  var letzteNachricht = "";
 
   var pruefungen = {
     name: function (w) { return w.trim().length >= 2 ? "" : "Bitte geben Sie Ihren Namen an."; },
-    email: function (w) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(w.trim()) ? "" : "Bitte geben Sie eine gültige E-Mail-Adresse an, z. B. name@firma.ch."; },
     nachricht: function (w) { return w.trim().length >= 10 ? "" : "Bitte beschreiben Sie in ein paar Worten, worum es geht."; }
   };
 
@@ -50,16 +44,17 @@
       setzeFehler(feld, text);
       if (text && !erstesFeld) erstesFeld = feld;
     });
-    var einwilligung = formular.elements.einwilligung;
-    var text = einwilligung.checked ? "" : "Bitte bestätigen Sie die Einwilligung.";
-    setzeFehler(einwilligung, text);
-    if (text && !erstesFeld) erstesFeld = einwilligung;
     return erstesFeld;
   }
 
   function zeigeStatus(text, ok) {
     status.textContent = text;
     status.className = "formular__status " + (ok ? "formular__status--ok" : "formular__status--fehler");
+  }
+
+  function wert(name) {
+    var feld = formular.elements[name];
+    return feld ? feld.value.trim() : "";
   }
 
   // Fehler verschwinden, sobald ein Feld korrigiert ist
@@ -79,28 +74,35 @@
       return;
     }
 
-    knopf.disabled = true;
-    zeigeStatus("Anfrage wird gesendet …", true);
+    var objekt = wert("objekt");
+    var betreff = "Anfrage über ostsicht.ch – " + wert("name") + (objekt ? " (" + objekt + ")" : "");
+    var zeilen = [
+      wert("nachricht"),
+      "",
+      "Name: " + wert("name"),
+      "Firma: " + (wert("firma") || "–"),
+      "E-Mail: " + (wert("email") || "–"),
+      "Telefon: " + (wert("telefon") || "–"),
+      "Ort: " + (wert("ort") || "–"),
+      "Objekt: " + (objekt || "–")
+    ];
+    letzteNachricht = "An: " + EMPFAENGER + "\nBetreff: " + betreff + "\n\n" + zeilen.join("\n");
 
-    fetch(formular.action, {
-      method: "POST",
-      // Als einfaches Formular senden (kein multipart): der Server nimmt nichts anderes an.
-      body: new URLSearchParams(new FormData(formular)),
-      headers: { "Accept": "application/json" }
-    })
-      .then(function (antwort) { return antwort.json().catch(function () { return { ok: false }; }); })
-      .then(function (daten) {
-        if (daten && daten.ok) {
-          formular.reset();
-          if (gestartet) gestartet.value = String(Math.floor(Date.now() / 1000));
-          zeigeStatus("Danke! Ihre Anfrage ist bei uns angekommen. Wir melden uns in der Regel innert zwei Arbeitstagen.", true);
-        } else {
-          zeigeStatus((daten && daten.message) || "Die Anfrage konnte nicht gesendet werden. Bitte schreiben Sie uns direkt an info@ostsicht.ch.", false);
-        }
-      })
-      .catch(function () {
-        zeigeStatus("Keine Verbindung zum Server. Bitte versuchen Sie es nochmals oder schreiben Sie an info@ostsicht.ch.", false);
-      })
-      .finally(function () { knopf.disabled = false; });
+    window.location.href = "mailto:" + EMPFAENGER +
+      "?subject=" + encodeURIComponent(betreff) +
+      "&body=" + encodeURIComponent(zeilen.join("\r\n"));
+
+    zeigeStatus("Ihr E-Mail-Programm sollte sich jetzt öffnen. Falls nicht, kopieren Sie die Nachricht und senden Sie sie an " + EMPFAENGER + ".", true);
+    if (kopieren && navigator.clipboard) kopieren.hidden = false;
   });
+
+  if (kopieren) {
+    kopieren.addEventListener("click", function () {
+      navigator.clipboard.writeText(letzteNachricht).then(function () {
+        zeigeStatus("Nachricht kopiert. Fügen Sie sie in eine E-Mail an " + EMPFAENGER + " ein.", true);
+      }, function () {
+        zeigeStatus("Kopieren war nicht möglich. Bitte schreiben Sie direkt an " + EMPFAENGER + ".", false);
+      });
+    });
+  }
 })();

@@ -354,7 +354,8 @@
           </div>
         </div>
 
-        <form class="formular" id="formular" action="contact.php" method="post" novalidate>
+        <!-- Ohne Server: Das Formular bereitet die E-Mail im E-Mail-Programm der Besucherin vor. -->
+        <form class="formular" id="formular" action="mailto:info@ostsicht.ch" method="post" enctype="text/plain" novalidate>
           <div>
             <label for="name">Name <span class="pflicht">(nötig)</span></label>
             <input id="name" name="name" type="text" autocomplete="name" required maxlength="120">
@@ -365,9 +366,8 @@
             <input id="firma" name="firma" type="text" autocomplete="organization" maxlength="120">
           </div>
           <div>
-            <label for="email">E-Mail <span class="pflicht">(nötig)</span></label>
-            <input id="email" name="email" type="email" autocomplete="email" required maxlength="160">
-            <p class="feldfehler" id="email-fehler" hidden></p>
+            <label for="email">E-Mail</label>
+            <input id="email" name="email" type="email" autocomplete="email" maxlength="160">
           </div>
           <div>
             <label for="telefon">Telefon</label>
@@ -394,24 +394,11 @@
             <p class="feldfehler" id="nachricht-fehler" hidden></p>
           </div>
 
-          <!-- Spamschutz: für Menschen unsichtbar -->
-          <div class="honig" aria-hidden="true">
-            <label for="website">Website</label>
-            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
-          </div>
-          <input type="hidden" name="gestartet" id="gestartet" value="">
-
-          <div class="ganz">
-            <label class="einwilligung">
-              <input type="checkbox" name="einwilligung" id="einwilligung" value="ja" required>
-              <span>Ich bin einverstanden, dass Ostsicht meine Angaben zur Bearbeitung der Anfrage verwendet. Mehr dazu in der <a href="datenschutz.html">Datenschutzerklärung</a>.</span>
-            </label>
-            <p class="feldfehler" id="einwilligung-fehler" hidden></p>
-          </div>
-
           <div class="ganz formular__aktion">
-            <button class="btn btn--gruen" type="submit">Anfrage senden</button>
+            <button class="btn btn--gruen" type="submit">E-Mail vorbereiten</button>
+            <p class="formular__hinweis">Ihr E-Mail-Programm öffnet sich mit der fertigen Nachricht. Sie prüfen sie und senden sie selbst ab.</p>
             <p class="formular__status" id="formular-status" role="status" aria-live="polite"></p>
+            <button class="btn btn--rahmen formular__kopieren" type="button" id="kopieren" hidden>Nachricht kopieren</button>
           </div>
         </form>
       </div>

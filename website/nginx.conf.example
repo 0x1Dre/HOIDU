@@ -1,7 +1,5 @@
-# Ostsicht – Beispiel für Nginx mit PHP-FPM
-# Pfade und PHP-Version an Ihren Server anpassen.
-# Im http-Block (z. B. /etc/nginx/conf.d/ostsicht-limits.conf):
-#   limit_req_zone $binary_remote_addr zone=kontakt:1m rate=10r/m; Zertifikat z. B. mit certbot (Let's Encrypt).
+# Ostsicht – Beispiel für Nginx (statische Website, ohne PHP)
+# Pfade an Ihren Server anpassen.
 
 server {
     listen 80;
@@ -31,7 +29,7 @@ server {
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-    add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'" always;
+    add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; form-action 'self' mailto:; frame-ancestors 'none'; base-uri 'self'" always;
 
     gzip on;
     gzip_types text/css application/javascript image/svg+xml;
@@ -41,19 +39,8 @@ server {
         add_header Cache-Control "public";
     }
 
-    location = /contact.php {
-        # Nur kleine, einfache Formularanfragen an PHP weitergeben
-        limit_except POST { deny all; }
-        client_max_body_size 16k;
-        limit_req zone=kontakt burst=3 nodelay;
-        if ($content_type !~* "^application/x-www-form-urlencoded") { return 415; }
-        include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME $document_root/contact.php;
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
-    }
-
-    # Andere PHP-Dateien gibt es nicht
-    location ~ \.php$ { return 404; }
+    # Rein statisch: kein PHP, keine Skripte
+    location ~ \.(php|phtml|phar|cgi|pl|py)$ { return 404; }
     location ~ /(README\.md|nginx\.conf\.example|\.ht|\.git) { deny all; }
 
     location / {

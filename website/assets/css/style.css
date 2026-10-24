@@ -283,6 +283,8 @@ p { margin: 0 0 1em; max-width: 64ch; }
 .honig { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .formular__aktion { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 .formular__status { margin: 0; font-weight: 500; }
+.formular__hinweis { margin: 0; color: var(--grau); font-size: .9375rem; }
+.formular__kopieren { justify-self: start; }
 .formular__status--ok { color: var(--gruen); }
 .formular__status--fehler { color: var(--fehler); }
 .formular button[disabled] { opacity: .6; cursor: progress; }
