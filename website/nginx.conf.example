@@ -1,5 +1,7 @@
 # Ostsicht – Beispiel für Nginx mit PHP-FPM
-# Pfade und PHP-Version an Ihren Server anpassen. Zertifikat z. B. mit certbot (Let's Encrypt).
+# Pfade und PHP-Version an Ihren Server anpassen.
+# Im http-Block (z. B. /etc/nginx/conf.d/ostsicht-limits.conf):
+#   limit_req_zone $binary_remote_addr zone=kontakt:1m rate=10r/m; Zertifikat z. B. mit certbot (Let's Encrypt).
 
 server {
     listen 80;
@@ -40,6 +42,11 @@ server {
     }
 
     location = /contact.php {
+        # Nur kleine, einfache Formularanfragen an PHP weitergeben
+        limit_except POST { deny all; }
+        client_max_body_size 16k;
+        limit_req zone=kontakt burst=3 nodelay;
+        if ($content_type !~* "^application/x-www-form-urlencoded") { return 415; }
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root/contact.php;
         fastcgi_pass unix:/run/php/php8.2-fpm.sock;

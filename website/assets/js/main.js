@@ -84,7 +84,8 @@
 
     fetch(formular.action, {
       method: "POST",
-      body: new FormData(formular),
+      // Als einfaches Formular senden (kein multipart): der Server nimmt nichts anderes an.
+      body: new URLSearchParams(new FormData(formular)),
       headers: { "Accept": "application/json" }
     })
       .then(function (antwort) { return antwort.json().catch(function () { return { ok: false }; }); })

@@ -58,6 +58,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     antworten(false, 'Bitte verwenden Sie das Formular auf der Website.', 405, $alsJson);
 }
 
+// Nur einfache Formulardaten annehmen (keine Datei-Uploads, kleine Anfragen)
+$typ = strtolower($_SERVER['CONTENT_TYPE'] ?? '');
+if (strpos($typ, 'application/x-www-form-urlencoded') !== 0 || (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 16384) {
+    antworten(false, 'Ungültige Anfrage.', 415, $alsJson);
+}
+
 // Spamschutz 1: verstecktes Feld muss leer bleiben
 if (feld('website', 200) !== '') {
     // Bots bekommen eine Erfolgsmeldung, damit sie nicht weiter probieren
